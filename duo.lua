@@ -70,10 +70,10 @@ playerB = {
 function TIC()
     if mode == "menu" then
         cls(BLACK)
-        spr(BOHR,0,40,14,6,0,0,1,2)
-        spr(BOHR,192,40,14,6,1,0,1,2)
-        spr(CAT_OPEN,64,88,14,3,0,0,2,2)
-        spr(CAT_CLOSED,128,88,14,3,1,0,2,2)
+        spr(BOHR,0,40,BLACK,6,0,0,1,2)
+        spr(BOHR,192,40,BLACK,6,1,0,1,2)
+        spr(CAT_OPEN,64,88,BLACK,3,0,0,2,2)
+        spr(CAT_CLOSED,128,88,BLACK,3,1,0,2,2)
         print_centered("The Boring World", 10, ORANGE, false, 2)
         print_centered("of Niels Bohr", 30, ORANGE, false, 2)
         print_centered("Based on a true story", 50, ORANGE)
@@ -82,19 +82,20 @@ function TIC()
             mode="game"
         end
     elseif mode=="game_over" then
-        cls(LIGHT_GREY)
-        print("GAME OVER :(", 48, 48)
-        print("Press Z to start", 48, 72)
+        cls(BLACK)
+        print_centered("GAME OVER :(", 30, GRAY, false, 3)
+        print_centered("Press Z to restart",72)
         if btn(BUTTON_Z) then
             mode="game"
+            -- TODO: Reset game values, now position etc is keept.
         end
     elseif mode=="game" then
         handle_input()
         -- Draw
         cls(LIGHT_GREY)
         map()
-        spr(DANSK,playerA.x,playerA.y,14,1,0,0,1,1)
-        spr(DANSK,playerB.x,playerB.y,14,1,0,0,1,1)
+        spr(DANSK,playerA.x,playerA.y,BLACK,1,0,0,1,1)
+        spr(DANSK,playerB.x,playerB.y,BLACK,1,0,0,1,1)
     end
     t=t+1
 end
