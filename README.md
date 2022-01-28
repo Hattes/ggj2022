@@ -1,3 +1,3 @@
 # ggj2022
 
-test
+Made for Global Game Jam 2022

@@ -2,13 +2,13 @@
 -- author: game developer
 -- desc:   short description
 -- script: lua
--- apa
+
 t=0
 x=96
 y=24
 
 function TIC()
-
+    -- Move
     if btn(0) then y=y-1 end
     if btn(1) then y=y+1 end
     if btn(2) then x=x-1 end
