@@ -4,23 +4,85 @@
 -- script: lua
 
 t=0
-x=4*8
-y=4*8
-
+height = 136
+width = 240
+tileSize = 8
+tileHeight = 17 -- 136 / 8
+tileWidth = 30 -- 240 / 8
+playerA = {
+    x=0,
+    y=0,
+    tileX=1,
+    tileY=1,
+}
+playerB = {
+    x=0,
+    y=0,
+    tileX=1,
+    tileY=tileHeight - 2,
+}
 function TIC()
-    -- Move
-    if btn(0) then y=y-1 end
-    if btn(1) then y=y+1 end
-    if btn(2) then x=x-1 end
-    if btn(3) then x=x+1 end
 
+    handle_input()
     -- Draw
     cls(13)
     map()
-    spr(256,x,y,14,1,0,0,1,1)
-    spr(256,x,16*8-y,14,1,0,0,1,1)
+    spr(256,playerA.x,playerA.y,14,1,0,0,1,1)
+    spr(256,playerB.x,16*8-playerA.y,14,1,0,0,1,1)
     t=t+1
 end
+
+function handle_input()
+    -- buttons:
+    -- up       0
+    -- down     1
+    -- left     2
+    -- right    3
+    -- z        4
+    -- x        5
+    -- a        6
+    -- s        7
+
+    if btnp(0) then
+        moveUp(playerA)
+        moveDown(playerB)
+    elseif btnp(1) then
+        moveDown(playerA)
+        moveUp(playerB)
+    elseif btnp(2) then
+        moveLeft(playerA)
+        moveLeft(playerB)
+    elseif btnp(3) then
+        moveRight(playerA)
+        moveRight(playerB)
+    end
+    playerA.x = playerA.tileX*8
+    playerA.y = playerA.tileY*8
+    playerB.x = playerB.tileX*8
+    playerB.y = playerB.tileY*8
+end
+
+function moveUp(player)
+    if collision(player.x*8, (player.y-1)*8) then return end
+    player.tileY = player.tileY - 1
+end
+function moveDown(player)
+    if collision(player.x*8, (player.y+1)*8) then return end
+    player.tileY = player.tileY + 1
+end
+function moveLeft(player)
+    if collision((player.x-1)*8, player.y*8) then return end
+    player.tileX = player.tileX - 1
+end
+function moveRight(player)
+    if collision((player.x+1)*8, player.y*8) then return end
+    player.tileX = player.tileX + 1
+end
+
+function collision(x, y)
+    return false
+end
+
 
 -- <TILES>
 -- 001:ccccccccc2222222c2222222c2222222c2222222c2222222c2222222c222222c
