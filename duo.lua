@@ -5,6 +5,41 @@
 
 
 ------ CONSTANTS ----------
+-- size
+HEIGHT = 136
+WIDTH = 240
+TILE_SIZE = 8
+TILE_HEIGHT = 77 -- 136 / 8
+TILE_WIDTH = 30 -- 240 / 8
+
+-- buttons
+BUTTON_UP = 0
+BUTTON_DOWN = 1
+BUTTON_LEFT = 2
+BUTTON_RIGHT = 3
+BUTTON_Z = 4
+BUTTON_X = 5
+BUTTON_A = 6
+BUTTON_S = 7
+
+-- colors (default palette SWEETIE-16)
+BLACK = 0
+PURPLE = 1
+RED = 2
+ORANGE = 3
+YELLOW = 4
+LIGHT_GREEN = 5
+GREEN = 6
+DARK_GREEN = 7
+DARK_BLUE = 8
+BLUE = 9
+LIGHT_BLUE = 10
+CYAN = 11
+WHITE = 12
+LIGHT_GREY = 13
+GREY = 14
+DARK_GREY = 15
+
 -- tile flags
 SOLID = 0
 DEADLY = 1
@@ -18,11 +53,6 @@ BOHR = 275
 ------ GLOBAL VARIABLES ----------
 t=0
 mode="menu"
-height = 136
-width = 240
-tileSize = 8
-tileHeight = 17 -- 136 / 8
-tileWidth = 30 -- 240 / 8
 playerA = {
     x=0,
     y=0,
@@ -33,34 +63,35 @@ playerB = {
     x=0,
     y=0,
     tileX=1,
-    tileY=tileHeight - 2,
+    tileY=TILE_HEIGHT - 2,
 }
 
+------ FUNCTIONS -----------
 function TIC()
     if mode == "menu" then
-        cls(0)
+        cls(BLACK)
         spr(BOHR,0,40,14,6,0,0,1,2)
         spr(BOHR,192,40,14,6,1,0,1,2)
         spr(CAT_OPEN,64,88,14,3,0,0,2,2)
         spr(CAT_CLOSED,128,88,14,3,1,0,2,2)
-        print_centered("The Boring World", 10, 3, false, 2)
-        print_centered("of Niels Bohr", 30, 3, false, 2)
-        print_centered("Based on a true story", 50, 3)
-        print_centered("Press Z to start", 75, 3)
-        if btn(4) then
+        print_centered("The Boring World", 10, ORANGE, false, 2)
+        print_centered("of Niels Bohr", 30, ORANGE, false, 2)
+        print_centered("Based on a true story", 50, ORANGE)
+        print_centered("Press Z to start", 75, ORANGE)
+        if btn(BUTTON_Z) then
             mode="game"
         end
     elseif mode=="game_over" then
-        cls(13)
+        cls(LIGHT_GREY)
         print("GAME OVER :(", 48, 48)
         print("Press Z to start", 48, 72)
-        if btn(4) then
+        if btn(BUTTON_Z) then
             mode="game"
         end
     elseif mode=="game" then
         handle_input()
         -- Draw
-        cls(13)
+        cls(LIGHT_GREY)
         map()
         spr(DANSK,playerA.x,playerA.y,14,1,0,0,1,1)
         spr(DANSK,playerB.x,playerB.y,14,1,0,0,1,1)
@@ -69,26 +100,16 @@ function TIC()
 end
 
 function handle_input()
-    -- buttons:
-    -- up       0
-    -- down     1
-    -- left     2
-    -- right    3
-    -- z        4
-    -- x        5
-    -- a        6
-    -- s        7
-
-    if btnp(0) then
+    if btnp(BUTTON_UP) then
         moveUp(playerA)
         moveDown(playerB)
-    elseif btnp(1) then
+    elseif btnp(BUTTON_DOWN) then
         moveDown(playerA)
         moveUp(playerB)
-    elseif btnp(2) then
+    elseif btnp(BUTTON_LEFT) then
         moveLeft(playerA)
         moveLeft(playerB)
-    elseif btnp(3) then
+    elseif btnp(BUTTON_RIGHT) then
         moveRight(playerA)
         moveRight(playerB)
     end
@@ -138,7 +159,7 @@ function print_centered(string, y, color, fixed, scale, smallfont)
         scale = scale or 1
         smallfont = smallfont or false
         local string_width = print(string, -100, -100, color, fixed, scale, smallfont)
-        return print(string, (width-string_width)//2, y, color, fixed, scale, smallfont)
+        return print(string, (WIDTH-string_width)//2, y, color, fixed, scale, smallfont)
 end
 
 -- <TILES>
