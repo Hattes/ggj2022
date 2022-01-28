@@ -38,7 +38,7 @@ function TIC()
     cls(13)
     map()
     spr(256,playerA.x,playerA.y,14,1,0,0,1,1)
-    spr(256,playerB.x,16*8-playerA.y,14,1,0,0,1,1)
+    spr(256,playerB.x,playerB.y,14,1,0,0,1,1)
     t=t+1
 end
 
@@ -89,8 +89,8 @@ function moveRight(player)
     player.tileX = player.tileX + 1
 end
 
-function collision(x, y)
-    tile_id = mget(x, y)
+function collision(tileX, tileY)
+    tile_id = mget(tileX, tileY)
     if fget(tile_id, SOLID) then
         return true
     elseif fget(tile_id, DEADLY) then
