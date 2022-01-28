@@ -3,6 +3,16 @@
 -- desc:   short description
 -- script: lua
 
+
+
+
+------ CONSTANTS ----------
+-- tile flags
+SOLID = 0
+DEADLY = 1
+
+
+------ GLOBAL VARIABLES ----------
 t=0
 height = 136
 width = 240
@@ -63,26 +73,36 @@ function handle_input()
 end
 
 function moveUp(player)
-    if collision(player.x*8, (player.y-1)*8) then return end
+    if collision(player.tileX, player.tileY-1) then return end
     player.tileY = player.tileY - 1
 end
 function moveDown(player)
-    if collision(player.x*8, (player.y+1)*8) then return end
+    if collision(player.tileX, player.tileY+1) then return end
     player.tileY = player.tileY + 1
 end
 function moveLeft(player)
-    if collision((player.x-1)*8, player.y*8) then return end
+    if collision(player.tileX-1, player.tileY) then return end
     player.tileX = player.tileX - 1
 end
 function moveRight(player)
-    if collision((player.x+1)*8, player.y*8) then return end
+    if collision(player.tileX+1, player.tileY) then return end
     player.tileX = player.tileX + 1
 end
 
 function collision(x, y)
-    return false
+    tile_id = mget(x, y)
+    if fget(tile_id, SOLID) then
+        return true
+    elseif fget(tile_id, DEADLY) then
+        game_over()
+    else
+        return false
+    end
 end
 
+function game_over()
+    trace("GAME OVER!")
+end
 
 -- <TILES>
 -- 001:ccccccccc2222222c2222222c2222222c2222222c2222222c2222222c222222c
