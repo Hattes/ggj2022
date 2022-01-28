@@ -1,9 +1,7 @@
--- title:  game title
--- author: game developer
--- desc:   short description
+-- title:  The Boring World of Niels Bohr
+-- author: Torakko, Hattes, sfabian
+-- desc:   Help Niels to survive in the boring world
 -- script: lua
-
-
 
 
 ------ CONSTANTS ----------
@@ -11,6 +9,11 @@
 SOLID = 0
 DEADLY = 1
 
+-- sprites
+DANSK = 256
+CAT_CLOSED = 272
+CAT_OPEN = 304
+BOHR = 275
 
 ------ GLOBAL VARIABLES ----------
 t=0
@@ -32,11 +35,18 @@ playerB = {
     tileX=1,
     tileY=tileHeight - 2,
 }
+
 function TIC()
     if mode == "menu" then
-        cls(13)
-        print("Welcome to da game", 48, 48)
-        print("Press Z to start", 48, 72)
+        cls(0)
+        spr(BOHR,0,40,14,6,0,0,1,2)
+        spr(BOHR,192,40,14,6,1,0,1,2)
+        spr(CAT_OPEN,64,88,14,3,0,0,2,2)
+        spr(CAT_CLOSED,128,88,14,3,1,0,2,2)
+        print_centered("The Boring World", 10, 3, false, 2)
+        print_centered("of Niels Bohr", 30, 3, false, 2)
+        print_centered("Based on a true story", 50, 3)
+        print_centered("Press Z to start", 75, 3)
         if btn(4) then
             mode="game"
         end
@@ -52,8 +62,8 @@ function TIC()
         -- Draw
         cls(13)
         map()
-        spr(256,playerA.x,playerA.y,14,1,0,0,1,1)
-        spr(256,playerB.x,playerB.y,14,1,0,0,1,1)
+        spr(DANSK,playerA.x,playerA.y,14,1,0,0,1,1)
+        spr(DANSK,playerB.x,playerB.y,14,1,0,0,1,1)
     end
     t=t+1
 end
@@ -119,6 +129,16 @@ end
 function game_over()
     trace("GAME OVER!")
     mode="game_over"
+end
+
+function print_centered(string, y, color, fixed, scale, smallfont)
+        y = y or 0
+        color = color or 15
+        fixed = fixed or false
+        scale = scale or 1
+        smallfont = smallfont or false
+        local string_width = print(string, -100, -100, color, fixed, scale, smallfont)
+        return print(string, (width-string_width)//2, y, color, fixed, scale, smallfont)
 end
 
 -- <TILES>
