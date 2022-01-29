@@ -83,6 +83,20 @@ SPRITE_BOHR_BODY = {
     }
 }
 
+SPRITE_BOHR_DEATH = {
+    {sprite=301, height=2},
+    {sprite=302, height=2},
+    {sprite=303, height=2},
+    {sprite=333, height=2},
+    {sprite=334, height=2},
+    {sprite=335, height=2},
+    {sprite=365, height=2},
+    {sprite=366, height=2},
+    {sprite=367, height=2},
+    {sprite=397, height=2},
+    {sprite=398, height=2},
+}
+
 -- sound effects
 SFX_HURT = 48
 SFX_ENEMY_HURT = 49
@@ -122,6 +136,7 @@ MAX_SWITCHING_WEAPONS_TIME = 60
 ENTANGLED_BLOCK_A = 120
 ENTANGLED_BLOCK_B = 121
 LEVELS = {{x_tile_min=0, x_tile_max=239, y_tile_min=0, y_tile_max=16}}
+MAX_DEATH_COUNTER = 120
 
 ------ GLOBAL VARIABLES ----------
 t=0
@@ -232,6 +247,7 @@ function restart()
         iframes_max=60,
         sfxs={hurt={id=SFX_HURT, note='E-3'}},
         dead=false,
+        death_counter=0,
     }
     playerB = {
         x=16,
@@ -252,6 +268,7 @@ function restart()
         iframes_max=60,
         sfxs={hurt={id=SFX_HURT, note='E-3'}},
         dead=false,
+        death_counter=0,
     }
     state = STATE_GAME
     cam = {x=0,y=0}
@@ -372,9 +389,30 @@ function draw_map()
 end
 
 function draw_bohr(player)
+    if player.dead then
+        local index = 1 + math.floor(
+            ((MAX_DEATH_COUNTER - player.death_counter - 1) / MAX_DEATH_COUNTER) *
+            #SPRITE_BOHR_DEATH
+        )
+        local death_sprite = SPRITE_BOHR_DEATH[index]
+        spr(
+            death_sprite.sprite,
+            player.x-cam.x,
+            player.y-cam.y-8,
+            BLACK,
+            1,
+            0,
+            0,
+            1,
+            death_sprite.height
+        )
+        return
+    end
+
     if math.fmod(player.iframes, 2) == 1 then
         return
     end
+
     -- draw head
     spr(SPRITE_BOHR_HEAD,
         player.x-cam.x,
@@ -486,8 +524,11 @@ function update_players()
         check_enemy_collision(player)
         update_iframes(player)
         if player.dead then
-            sfx(SFX_DEATH, 'D-5', -1, 1, 15, -1)
-            game_over()
+            player.death_counter = math.max(player.death_counter - 1, 0)
+            if player.death_counter == 0 then
+                sfx(SFX_DEATH, 'D-5', -1, 1, 15, -1)
+                game_over()
+            end
         end
         player.spr_counter = player.spr_counter + PLAYER_ANIMATION_MOVE_SPEED
     end
@@ -565,34 +606,40 @@ function check_radiation_collision(player)
 end
 
 function kill_entity(entity)
-    -- TODO: Add death animation
-    entity.dead = true
+    if not entity.dead then
+        entity.dead = true
+        entity.death_counter = MAX_DEATH_COUNTER
+    end
 end
 
 function update_weapons()
     for _, player in ipairs({playerA, playerB}) do
-        if not switching_weapons and player.firing then
-            if player.fire_mode == FIRE_PARTICLE then
-                player.weapon_state = PLAYER_WEAPON_STATE_FIRE_PARTICLE
-                if player.particle_timer == 0 then
-                    shoot_particle(player.x, player.y)
-                    player.particle_timer = PARTICLE_SHOOT_INTERVAL
-                end
-            elseif player.fire_mode == FIRE_WAVE then
-                player.weapon_state = PLAYER_WEAPON_STATE_FIRE_WAVE
-                wave.firing = true
-                wave.x = player.x + 11
-                wave.y = player.y
-            end
-        else
-            player.weapon_state = PLAYER_WEAPON_STATE_FIRE_NO
-            wave.firing = false
-        end
-    player.particle_timer = math.max(0, player.particle_timer-1) -- count down once each frame
+        update_weapons_for_player(player)
     end
     for _, particle in ipairs(particles) do
         particle.x = particle.x + PARTICLE_SPEED
     end
+end
+
+function update_weapons_for_player(player)
+    if not switching_weapons and player.firing and not player.dead then
+        if player.fire_mode == FIRE_PARTICLE then
+            player.weapon_state = PLAYER_WEAPON_STATE_FIRE_PARTICLE
+            if player.particle_timer == 0 then
+                shoot_particle(player.x, player.y)
+                player.particle_timer = PARTICLE_SHOOT_INTERVAL
+            end
+        elseif player.fire_mode == FIRE_WAVE then
+            player.weapon_state = PLAYER_WEAPON_STATE_FIRE_WAVE
+            wave.firing = true
+            wave.x = player.x + 11
+            wave.y = player.y
+        end
+    else
+        player.weapon_state = PLAYER_WEAPON_STATE_FIRE_NO
+        wave.firing = false
+    end
+    player.particle_timer = math.max(0, player.particle_timer-1) -- count down once each frame
 end
 
 function shoot_particle(playerX, playerY)
@@ -636,21 +683,29 @@ function handle_input()
     playerB.tileX = math.floor(playerB.x/8)
     playerB.tileY = math.floor(playerB.y/8)
     for _, player in ipairs({playerA, playerB}) do
-        if btnp(BUTTON_Z) then
-            player.begin_firing = true  -- to avoid firing right after starting the level
-        end
-        if player.begin_firing and btn(BUTTON_Z) then
-            player.firing = true
-        else
-            player.firing = false
-        end
+        handle_shooting_input(player)
     end
     -- Switch weapon fire mode
-    if btnp(BUTTON_X) then
+    if btnp(BUTTON_X) and not playerA.dead and not playerB.dead then
         start_switching_weapons()
     end
     check_tile_effects(playerA)
     check_tile_effects(playerB)
+end
+
+function handle_shooting_input(player)
+    if player.dead then
+        return
+    end
+
+    if btnp(BUTTON_Z) then
+        player.begin_firing = true  -- to avoid firing right after starting the level
+    end
+    if player.begin_firing and btn(BUTTON_Z) then
+        player.firing = true
+    else
+        player.firing = false
+    end
 end
 
 function start_switching_weapons()
@@ -682,6 +737,10 @@ function update_camera()
 end
 
 function movePlayer(player, dx, dy, dir)
+    if player.dead then
+        return
+    end
+
     entity = player
     player.move_state = PLAYER_STATE_MOVE
     if inarray(dir, {DIR_LEFT, DIR_RIGHT}) and not is_entity_next_to_solid(entity, dir) then
@@ -796,6 +855,7 @@ function spawn_cat(tile_x,tile_y)
         health=2,
         sfxs={hurt={id=SFX_ENEMY_HURT, note='C#5'}},
         dead=false,
+        death_counter=0,
         iframes=0,
         iframes_max=30,
     }
@@ -820,6 +880,7 @@ function spawn_bird()
         health=1,
         sfxs={hurt={id=SFX_ENEMY_HURT, note='C#5'}},
         dead=false,
+        death_counter=0,
         iframes=0,
         iframes_max=30,
     }
@@ -1096,10 +1157,10 @@ end
 -- 125:cfcdcf00ccccfc000ccfcc0000ccc00000000000000000000cccccc0cccccccc
 -- 126:0ccfc000cfcdcf00ccccfc000ccfcc0000ccc0000000000000000000cccccccc
 -- 127:00cc00000ccfc000cfcdcf00ccccfc000ccfcc0000ccc00000000000cccccccc
--- 141:0000000000cc00000ccfc000cfcdcf00ccccfc000ccfcc0000ccc000cccccccc
--- 142:000000000000000000cc00000ccfc000cfcdcf00ccccfc000ccfcc00cccccccc
 -- 144:00dccc00000ddcc00000dc0c0000dccc000dccc000cccccc000dccc00000dccc
 -- 145:dccc00000ddcc00000dc0c0000cccc0000dcccc000dccc0000cdcccc00000000
+-- 157:0000000000cc00000ccfc000cfcdcf00ccccfc000ccfcc0000ccc000cccccccc
+-- 158:000000000000000000cc00000ccfc000cfcdcf00ccccfc000ccfcc00cccccccc
 -- </SPRITES>
 
 -- <MAP>
