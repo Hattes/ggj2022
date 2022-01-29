@@ -55,6 +55,8 @@ SPRITE_CAT_OPEN = 304
 SPRITE_BOHR = 275
 SPRITE_BIRD1 = 306
 SPRITE_BIRD2 = 307
+SPRITE_RADIATION_1 = 352
+SPRITE_RADIATION_2 = 353
 
 -- directions
 DIR_UP = 1
@@ -81,6 +83,7 @@ FIRE_WAVE = 2
 PARTICLE_SHOOT_INTERVAL = 60
 PARTICLE_SPEED = 2
 BIRD_SPAWN_RATE = 60
+NUM_RADIATION_PARTICLES = 256
 
 ------ GLOBAL VARIABLES ----------
 t=0
@@ -93,7 +96,7 @@ function add(list, elem)
 end
 
 function del(list, elem)
-    found = false
+    local found = false
     for i=1, #list do
         if found then
             list[i-1] = list[i]
@@ -197,6 +200,8 @@ function restart()
     spawn_cat(16,14)
     spawn_cat(28,2)
     wave = {x=0,y=0,firing=false}
+    radiation_x = -10
+    radiation_particles = {}
 end
 
 function update_game_over()
@@ -230,6 +235,7 @@ function update_game()
     if t % BIRD_SPAWN_RATE == 0 then
         spawn_bird()
     end
+    update_radiation()
 end
 
 function draw_game()
@@ -239,6 +245,7 @@ function draw_game()
     draw_bohr(playerB)
     draw_particles()
     draw_wave()
+    draw_radiation()
 end
 
 function draw_map()
@@ -266,6 +273,52 @@ function draw_bohr(player)
         0,
         1,
         2)
+end
+
+function update_radiation()
+    radiation_x = radiation_x + 0.1
+    j = 1
+    for i = 1, #radiation_particles do
+        radiation_particles[j].x = radiation_particles[j].x + radiation_particles[j].speed_x
+        radiation_particles[j].y = radiation_particles[j].y + radiation_particles[j].speed_y
+        if radiation_particles[j].x > radiation_particles[j].end_x then
+            del(radiation_particles, radiation_particles[j])
+            j = j - 1
+        end
+        j = j + 1
+    end
+    while #radiation_particles < NUM_RADIATION_PARTICLES do
+        add(radiation_particles, new_radiation_particle())
+    end
+end
+
+function new_radiation_particle()
+    local y = math.random() * HEIGHT
+    local end_y = math.min(math.max(y + math.random() * 50 - 25, 0), HEIGHT)
+    return {
+        x=radiation_x,
+        y=y,
+        end_x=radiation_x + 32,
+        end_y=end_y,
+        speed_x=math.random() * 32 / 60,
+        speed_y=(end_y - y) / 60,
+        color=math.floor(math.random() * 16),
+    }
+end
+
+function draw_radiation()
+    spr(SPRITE_RADIATION_2, radiation_x - HEIGHT - cam.x, cam.y, BLACK, 17, 0, 0, 1, 1)
+    spr(SPRITE_RADIATION_1, radiation_x - HEIGHT - cam.x - 2, cam.y, BLACK, 17, 0, 0, 1, 1)
+
+    for i = 1, NUM_RADIATION_PARTICLES do
+        rect(
+            radiation_particles[i].x-cam.x,
+            radiation_particles[i].y-cam.y,
+            1,
+            1,
+            radiation_particles[i].color
+        )
+    end
 end
 
 function draw_particles()
@@ -300,6 +353,14 @@ end
 function update_players()
     handle_input()
     update_weapons()
+    check_radiation_collision(playerA)
+    check_radiation_collision(playerB)
+end
+
+function check_radiation_collision(player)
+    if player.x < radiation_x then
+        game_over()
+    end
 end
 
 function update_weapons()
@@ -563,16 +624,9 @@ function update_bird(bird, id)
 end
 
 -- <TILES>
--- 001:ccccccccc2222222c2222222c2222222c2222222c2222222c2222222c222222c
--- 002:cccccccc2222222c2222222c2222222c2222222c2222222c2222222cc222222c
 -- 003:9999999999a999999a9a9999999999999999999999999a999999a9a999999999
 -- 004:4444444444444444444444444444444444444444444444444444444444444444
 -- 016:ccccccccffcffffffcffffffcfffffffffffcffcffffffcffffffcffcccccccc
--- 017:c222222cc2222222c2222222c2222222c2222222c2222222c2222222cccccccc
--- 018:c222222c2222222c2222222c2222222c2222222c2222222c2222222ccccccccc
--- 032:2222222222222222222222222222222222222222222222222222222222222222
--- 033:c222222cc222222cc222222cc222222cc222222cc222222cc222222cc222222c
--- 034:cccccccc222222222222222222222222222222222222222222222222cccccccc
 -- 048:fffffffffdddddddfdddddddfdddddddfdddddddfdddddddfdddddddfddddddd
 -- 049:ffffffffdddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 -- 050:ffffffffdddddddfdddddddfdddddddfdddddddfdddddddfdddddddfdddddddf
@@ -630,6 +684,8 @@ end
 -- 058:0ffc9cf0fffe9eff0fff92220ffff41402ffff1002fffff000200ff000000222
 -- 064:0000444400444444004444440004444f000444f400004444000044ff333333ff
 -- 065:4403000044f30f0044ffff004ff2f2f04ffffff0ffff1ff0ffffff00fffc0fc0
+-- 096:6666666666666666666666666666666666666666666666666666666666666666
+-- 097:7777777777777777777777777777777777777777777777777777777777777777
 -- </SPRITES>
 
 -- <MAP>
