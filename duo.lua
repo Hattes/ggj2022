@@ -76,8 +76,8 @@ SPRITE_BOHR_BODY = {
     [PLAYER_STATE_MOVE] = {
         [PLAYER_WEAPON_STATE_FIRE_NO] = {{sprite=294, width=3, width_offset=-8},
                                          {sprite=310, width=3, width_offset=-8}},
-        [PLAYER_WEAPON_STATE_FIRE_PARTICLE] = {{sprite=298}, {sprite=314}},
-        [PLAYER_WEAPON_STATE_FIRE_WAVE] = {{sprite=297}, {sprite=313}}
+        [PLAYER_WEAPON_STATE_FIRE_PARTICLE] = {{sprite=299, width=2}, {sprite=315, width=2}},
+        [PLAYER_WEAPON_STATE_FIRE_WAVE] = {{sprite=297, width=2}, {sprite=313, width=2}}
     }
 }
 
@@ -202,8 +202,8 @@ function restart()
     enemies_cat = {}
     enemies_bird = {}
     playerA = {
-        x=8,
-        y=8,
+        x=16,
+        y=16,
         tileX=2,
         tileY=1,
         speed=PLAYER_SPEED,
@@ -222,8 +222,8 @@ function restart()
         dead=false,
     }
     playerB = {
-        x=8,
-        y=HEIGHT-16,
+        x=16,
+        y=HEIGHT-24,
         tileX=1,
         tileY=TILE_HEIGHT - 2,
         speed=PLAYER_SPEED,
@@ -424,9 +424,9 @@ function draw_particles()
     for _, particle in ipairs(particles) do
         rect(particle.x-cam.x,
              particle.y-cam.y,
-             2,
-             2,
-             RED)
+             3,
+             3,
+             ORANGE)
     end
 end
 
@@ -445,7 +445,7 @@ function draw_wave()
     for x=240, wave.x-cam.x, -wave_dx do
         line(x,         center-math.sin((sine_x)   /i_f)*amp,
              x+wave_dx, center-math.sin((sine_x+wave_dx)/i_f)*amp,
-             7)
+             LIGHT_BLUE)
         sine_x = sine_x - wave_dx
     end
 end
@@ -513,7 +513,7 @@ end
 
 function shoot_particle(playerX, playerY)
     x = playerX + 8
-    y = playerY + 2
+    y = playerY + 1
     particles[#particles+1] = {x=x,y=y, bbox=bounding_box({})}
 end
 
@@ -879,7 +879,9 @@ end
 -- 039:0ffc9cf0fffe9efffffe9eff0ffffff00fff4ff00ffffff20ff0002022200000
 -- 040:0000000000000000000000000000000020000000000000000000000000000000
 -- 041:0ffc9cf0fffe9eff0fff9aaa0ffff4940fffff900ffffff20ff0002022200000
--- 042:0ffc9cf0fffe9eff0fff92220ffff4140fffff100ffffff20ff0002022200000
+-- 042:000000000aa00000aaaa00009aa9000009900000000000000000000000000000
+-- 043:0ffc9cf0fffe9eff0fff92220ffff4140fffff100ffffff20ff0002022200000
+-- 044:0020000002200000222000000120000000100000000000000000000000000000
 -- 048:0000000000000000000000000000000000000000000000000000000400000044
 -- 049:0000000000000000000000000000000000000000000000000000300040003000
 -- 050:0000800000008800000088000008888008888884000000000000000000000000
@@ -890,7 +892,9 @@ end
 -- 055:0ffc9cf0fffe9efffffe9efffffefef002fffff002fffff000200ff000000222
 -- 056:0000000004000000f00000000000000000000000000000000000000000000000
 -- 057:0ffc9cf0fffe9eff0fff9aaa0ffff49402ffff9002fffff000200ff000000222
--- 058:0ffc9cf0fffe9eff0fff92220ffff41402ffff1002fffff000200ff000000222
+-- 058:000000000aa00000aaaa00009aa9000009900000000000000000000000000000
+-- 059:0ffc9cf0fffe9eff0fff92220ffff41402ffff1002fffff000200ff000000222
+-- 060:0020000002200000222000000120000000100000000000000000000000000000
 -- 064:0000444400444444004444440004444f000444f400004444000044ff333333ff
 -- 065:4403000044f30f0044ffff004ff2f2f04ffffff0ffff1ff0ffffff00fffc0fc0
 -- 096:6666666666666666666666666666666666666666666666666666666666666666
