@@ -160,6 +160,8 @@ function restart()
         speed=PLAYER_SPEED,
         particle_timer=0,
         fire_mode=FIRE_PARTICLE,
+        firing=false,
+        begin_firing=false,
     }
     playerB = {
         x=8,
@@ -169,6 +171,8 @@ function restart()
         speed=PLAYER_SPEED,
         particle_timer=0,
         fire_mode=FIRE_WAVE,
+        firing=false,
+        begin_firing=false,
     }
     state = STATE_GAME
     cam = {x=0,y=0}
@@ -343,12 +347,21 @@ function handle_input()
     playerA.tileY = math.floor(playerA.y/8)
     playerB.tileX = math.floor(playerB.x/8)
     playerB.tileY = math.floor(playerB.y/8)
-    if btn(BUTTON_X) then
-        playerA.firing = true
-        playerB.firing = true
-    else
-        playerA.firing = false
-        playerB.firing = false
+    for _, player in ipairs({playerA, playerB}) do
+        if btnp(BUTTON_Z) then
+            player.begin_firing = true  -- to avoid firing right after starting the level
+        end
+        if player.begin_firing and btn(BUTTON_Z) then
+            player.firing = true
+        else
+            player.firing = false
+        end
+    end
+    -- Switch weapon fire mode
+    if btnp(BUTTON_X) then
+        temp = playerA.fire_mode
+        playerA.fire_mode = playerB.fire_mode
+        playerB.fire_mode = temp
     end
     check_tile_effects(playerA)
     check_tile_effects(playerB)
