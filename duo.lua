@@ -281,13 +281,36 @@ end
 
 function draw_game()
     draw_map()
-    draw_enemies()
     draw_bohr(playerA)
+    draw_separator()
+    draw_enemies()
     draw_bohr(playerB)
     draw_particles()
     draw_wave()
     draw_radiation()
     draw_health()
+end
+
+function draw_separator()
+    draw_a_wave(160, 4, 20, YELLOW, 1, 1)
+    draw_a_wave(240, 1, 60, CYAN, 3, 1.2)
+    draw_a_wave(120, 2, 180, BLUE, 2, 1.4)
+    draw_a_wave(80, 3, 120, RED, 1, 1.6)
+end
+
+function draw_a_wave(samples, amp, freq, color, offset_factor, freq_factor)
+    local center = HEIGHT / 2
+
+    local i_f = 240/freq
+    local wave_dx = 240/samples
+    y_offs = math.sin(math.pi * (t % 60 * offset_factor) / (60 * offset_factor)) * 2 - 1
+    sine_x = t * freq_factor
+    for x=240, 0, -wave_dx do
+        line(x,         center-math.sin((sine_x)   /i_f)*amp + y_offs,
+             x+wave_dx, center-math.sin((sine_x+wave_dx)/i_f)*amp + y_offs,
+             color)
+        sine_x = sine_x - wave_dx
+    end
 end
 
 function draw_health()
@@ -400,6 +423,7 @@ function draw_particles()
              RED)
     end
 end
+
 function draw_wave()
     if not wave.firing then
         return
@@ -786,7 +810,7 @@ end
 -- <TILES>
 -- 003:9999999999a999999a9a9999999999999999999999999a999999a9a999999999
 -- 004:4444444444444444444444444444444444444444444444444444444444444444
--- 016:ccccccccffcffffffcffffffcfffffffffffcffcffffffcffffffcffcccccccc
+-- 016:00000000eeeeeeeeddddddddccccccccccccccccddddddddeeeeeeee00000000
 -- 048:fffffffffdddddddfdddddddfdddddddfdddddddfdddddddfdddddddfddddddd
 -- 049:ffffffffdddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 -- 050:ffffffffdddddddfdddddddfdddddddfdddddddfdddddddfdddddddfdddddddf
