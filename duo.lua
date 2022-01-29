@@ -231,15 +231,26 @@ function draw_map()
         x_offset, y_offset)
 end
 
--- saved position is feet but we need to use position for head
 function draw_bohr(player)
     local y = player.y - 8
-    spr(SPRITE_BOHR,player.x-cam.x,y,BLACK,1,0,0,1,2)
+    spr(SPRITE_BOHR,
+        player.x-cam.x,
+        player.y-cam.y-8, -- saved position is feet but we need to use position for head
+        BLACK,
+        1,
+        0,
+        0,
+        1,
+        2)
 end
 
 function draw_particles()
     for _, particle in ipairs(particles) do
-        rect(particle.x-cam.x, particle.y, 2, 2, RED)
+        rect(particle.x-cam.x,
+             particle.y-cam.y,
+             2,
+             2,
+             RED)
     end
 end
 
