@@ -313,6 +313,8 @@ function handle_input()
         playerA.firing = false
         playerB.firing = false
     end
+    check_tile_effects(playerA)
+    check_tile_effects(playerB)
 end
 
 function update_camera()
@@ -378,18 +380,19 @@ end
 
 function is_tile_solid(tileX, tileY)
     tile_id = mget(tileX, tileY)
-    if fget(tile_id, TILE_SOLID) then
-        return true
-    elseif fget(tile_id, TILE_DEADLY) then
+    return fget(tile_id, TILE_SOLID)
+end
+
+function check_tile_effects(player)
+    tile_id = mget(player.tileX, player.tileY)
+    if fget(tile_id, TILE_DEADLY) then
         game_over()
     elseif fget(tile_id, TILE_WINNING) then
         victory()
-    else
-        return false
     end
 end
 
-function victory(player)
+function victory()
     trace("VICTORY!")
     state = STATE_VICTORY
     victory_time = t
