@@ -811,21 +811,22 @@ function is_entity_next_to_solid(entity, dir)
 end
 
 function is_entity_by_solid(entity, dir, margin)
+    local bbox = abs_bbox(entity)
     if dir == DIR_LEFT then
-        left  = is_solid(entity.x - margin,     entity.y)
-             or is_solid(entity.x - margin,     entity.y + 7)
+        left  = is_solid(bbox.nw.x - margin, bbox.nw.y)
+             or is_solid(bbox.sw.x - margin, bbox.sw.y)
         return left
     elseif dir == DIR_RIGHT then
-        right = is_solid(entity.x + 7 + margin, entity.y)
-             or is_solid(entity.x + 7 + margin, entity.y + 7)
+        right = is_solid(bbox.ne.x + margin, bbox.ne.y)
+             or is_solid(bbox.se.x + margin, bbox.se.y)
         return right
     elseif dir == DIR_UP then
-        up    = is_solid(entity.x,              entity.y - margin)
-             or is_solid(entity.x + 7,          entity.y - margin)
+        up    = is_solid(bbox.nw.x, bbox.nw.y - margin)
+             or is_solid(bbox.ne.x, bbox.ne.y - margin)
         return up
     elseif dir == DIR_DOWN then
-        down  = is_solid(entity.x,              entity.y + 7 + margin)
-             or is_solid(entity.x + 7,          entity.y + 7 + margin)
+        down  = is_solid(bbox.sw.x, bbox.sw.y + margin)
+             or is_solid(bbox.se.x, bbox.se.y + margin)
         return down
     end
 end
