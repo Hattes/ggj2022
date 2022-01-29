@@ -634,16 +634,21 @@ function is_solid(x, y)
 end
 
 function is_tile_solid(tileX, tileY)
-    tile_id = mget(tileX, tileY)
+    local tile_id = mget(tileX, tileY)
     return fget(tile_id, TILE_SOLID)
 end
 
 function check_tile_effects(player)
-    tile_id = mget(player.tileX, player.tileY)
-    if fget(tile_id, TILE_DEADLY) then
-        hurt_entity(player)
-    elseif fget(tile_id, TILE_WINNING) then
-        victory()
+    local p_bbox = abs_bbox(player)
+    for _, corner in ipairs({p_bbox.nw, p_bbox.ne, p_bbox.sw, p_bbox.se}) do
+        local tile_x = math.floor(corner.x / 8)
+        local tile_y = math.floor(corner.y / 8)
+        tile_id = mget(tile_x, tile_y)
+        if fget(tile_id, TILE_DEADLY) then
+            hurt_entity(player)
+        elseif fget(tile_id, TILE_WINNING) then
+            victory()
+        end
     end
 end
 
