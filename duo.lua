@@ -49,10 +49,10 @@ TILE_DEADLY = 1
 TILE_WINNING = 2
 
 -- sprites
-DANSK = 256
-CAT_CLOSED = 272
-CAT_OPEN = 304
-BOHR = 275
+SPRITE_DANSK = 256
+SPRITE_CAT_CLOSED = 272
+SPRITE_CAT_OPEN = 304
+SPRITE_BOHR = 275
 
 -- directions
 DIR_UP = 1
@@ -83,6 +83,7 @@ PARTICLE_SPEED = 2
 t=0
 victory_time=0
 state = STATE_MENU
+enemies_cat = {}
 
 ------ UTILITIES ------
 function add(list, elem)
@@ -136,10 +137,10 @@ end
 
 function draw_menu()
     cls(BLACK)
-    spr(BOHR,0,40,BLACK,6,0,0,1,2)
-    spr(BOHR,192,40,BLACK,6,1,0,1,2)
-    spr(CAT_OPEN,64,88,BLACK,3,0,0,2,2)
-    spr(CAT_CLOSED,128,88,BLACK,3,1,0,2,2)
+    spr(SPRITE_BOHR,0,40,BLACK,6,0,0,1,2)
+    spr(SPRITE_BOHR,192,40,BLACK,6,1,0,1,2)
+    spr(SPRITE_CAT_OPEN,64,88,BLACK,3,0,0,2,2)
+    spr(SPRITE_CAT_CLOSED,128,88,BLACK,3,1,0,2,2)
     print_centered("The Boring World", 10, ORANGE, false, 2)
     print_centered("of Niels Bohr", 30, ORANGE, false, 2)
     print_centered("Based on a true story", 50, ORANGE)
@@ -148,6 +149,7 @@ end
 
 function restart()
     -- This is where we set state of players etc. to their initial values
+    enemies_cat = {}
     playerA = {
         x=8,
         y=8,
@@ -169,6 +171,8 @@ function restart()
     state = STATE_GAME
     cam = {x=0,y=0}
     particles = {}
+    spawn_cat(16,14)
+    spawn_cat(28,2)
 end
 
 function update_game_over()
@@ -202,6 +206,7 @@ end
 
 function draw_game()
     draw_map()
+    draw_enemies()
     draw_bohr(playerA)
     draw_bohr(playerB)
     draw_particles()
@@ -224,7 +229,7 @@ end
 -- saved position is feet but we need to use position for head
 function draw_bohr(player)
     local y = player.y - 8
-    spr(BOHR,player.x-cam.x,y,BLACK,1,0,0,1,2)
+    spr(SPRITE_BOHR,player.x-cam.x,y,BLACK,1,0,0,1,2)
 end
 
 function draw_particles()
@@ -388,6 +393,52 @@ end
 function game_over()
     trace("GAME OVER!")
     state = STATE_GAME_OVER
+end
+
+function spawn_cat(tile_x,tile_y)
+    local new_cat = {
+        sprite=SPRITE_CAT_CLOSED,
+        x=tile_x*8,
+        y=tile_y*8,
+        tileX=tile_x,
+        tileY=tile_y,
+        speed=PLAYER_SPEED,
+        flip=1,
+        width=2,
+        height=2,
+        health=1,
+    }
+    enemies_cat[#enemies_cat+1]=new_cat
+end
+
+function draw_enemies()
+  for _, cat in ipairs(enemies_cat) do
+      update_cat(cat)
+      draw_enemy(cat)
+  end
+end
+
+function draw_enemy(enemy)
+    spr(enemy.sprite,
+        enemy.x-cam.x,
+        enemy.y-cam.y,
+        -1,
+        1,
+        enemy.flip,
+        0,
+        enemy.width,
+        enemy.height)
+end
+
+function update_cat(cat)
+    -- TODO: Something better for the cats to do...
+    if t % 60 == 0 then
+        if cat.sprite == SPRITE_CAT_CLOSED then
+            cat.sprite = SPRITE_CAT_OPEN
+        else
+            cat.sprite = SPRITE_CAT_CLOSED
+        end
+    end
 end
 
 -- <TILES>
