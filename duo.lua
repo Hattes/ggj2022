@@ -85,6 +85,10 @@ victory_time=0
 state = STATE_MENU
 
 ------ UTILITIES ------
+function add(list, elem)
+    list[#list+1] = elem
+end
+
 function print_centered(string, y, color, fixed, scale, smallfont)
     y = y or 0
     color = color or 15
@@ -225,7 +229,7 @@ end
 
 function draw_particles()
     for _, particle in ipairs(particles) do
-        rect(particle.x, particle.y, 2, 2, RED)
+        rect(particle.x-cam.x, particle.y, 2, 2, RED)
     end
 end
 
