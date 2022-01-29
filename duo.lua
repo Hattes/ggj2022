@@ -232,8 +232,8 @@ function handle_input()
 end
 
 function update_camera()
-    local player_midpoint = 0
-    cam.x = math.max(120, playerA.x) - 120
+    local player_midpoint = (playerA.x + playerB.x) / 2
+    cam.x = math.max(120, player_midpoint) - 120
 end
 
 function movePlayer(player, dx, dy, dir)
