@@ -59,6 +59,10 @@ SPRITE_RADIATION_1 = 352
 SPRITE_RADIATION_2 = 353
 SPRITE_HEART = 368
 
+-- sound effects
+
+SFX_HURT = 48
+
 -- directions
 DIR_UP = 1
 DIR_DOWN = 2
@@ -186,6 +190,7 @@ function restart()
         begin_firing=false,
         health=MAX_HEALTH,
         bbox=bounding_box({}),
+        iframes=0,
     }
     playerB = {
         x=8,
@@ -199,6 +204,7 @@ function restart()
         begin_firing=false,
         health=MAX_HEALTH,
         bbox=bounding_box({}),
+        iframes=0,
     }
     state = STATE_GAME
     cam = {x=0,y=0}
@@ -281,6 +287,10 @@ function draw_map()
 end
 
 function draw_bohr(player)
+    if math.fmod(player.iframes, 2) == 1 then
+        return
+    end
+
     local y = player.y - 8
     spr(SPRITE_BOHR,
         player.x-cam.x,
@@ -371,14 +381,27 @@ end
 function update_players()
     handle_input()
     update_weapons()
+
     check_radiation_collision(playerA)
     check_radiation_collision(playerB)
+
+    update_iframes(playerA)
+    update_iframes(playerB)
+end
+
+function update_iframes(player)
+    player.iframes = math.max(player.iframes - 1, 0)
 end
 
 function check_radiation_collision(player)
     if player.x < radiation_x then
-        game_over()
+        kill_player(player)
     end
+end
+
+function kill_player(player)
+    -- TODO: Add death animation
+    game_over()
 end
 
 function update_weapons()
@@ -533,9 +556,23 @@ end
 function check_tile_effects(player)
     tile_id = mget(player.tileX, player.tileY)
     if fget(tile_id, TILE_DEADLY) then
-        game_over()
+        hurt_player(player)
     elseif fget(tile_id, TILE_WINNING) then
         victory()
+    end
+end
+
+function hurt_player(player)
+    if player.iframes > 0 then
+        return
+    end
+
+    player.iframes = 60
+    sfx(SFX_HURT)
+    player.health = player.health - 1
+
+    if player.health == 0 then
+        kill_player(player)
     end
 end
 
@@ -814,6 +851,7 @@ end
 -- 034:0200120032007200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200307000000000
 -- 035:03000300230043007300a300d300e300e300e300e300e300e300f300f300f300f300f300f300f300f300f300f300f300f300f300f300f300f300f300307000000000
 -- 039:000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000305000000000
+-- 048:440324050406040604070407040614043402540e640d740b840aa40ab409c408d408e408e408e408f408f408f408f408f408f408f408f408f408f408200000000000
 -- </SFX>
 
 -- <PATTERNS>
