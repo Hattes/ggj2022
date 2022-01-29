@@ -65,6 +65,8 @@ SPRITE_BIRD2 = 307
 SPRITE_RADIATION_1 = 352
 SPRITE_RADIATION_2 = 353
 SPRITE_HEART = 368
+SPRITE_PARTICLE_GUN = 261
+SPRITE_WAVE_GUN = 260
 
 SPRITE_BOHR_HEAD = 275
 SPRITE_BOHR_BODY = {
@@ -113,6 +115,7 @@ BIRD_SPAWN_RATE = 60
 NUM_RADIATION_PARTICLES = 256
 MAX_HEALTH = 5
 PLAYER_ANIMATION_MOVE_SPEED = 0.1
+MAX_SWITCHING_WEAPONS_TIME = 60
 
 ------ GLOBAL VARIABLES ----------
 t=0
@@ -201,6 +204,10 @@ function restart()
     -- This is where we set state of players etc. to their initial values
     enemies_cat = {}
     enemies_bird = {}
+    switching_weapons = false
+    switching_weapons_time = 0
+    weapon_wave_gun = {x=0, y=0}
+    weapon_particle_gun = {x=0, y=0}
     playerA = {
         x=16,
         y=16,
@@ -294,6 +301,7 @@ function draw_game()
     draw_particles()
     draw_wave()
     draw_radiation()
+    draw_weapon_switch()
     draw_health()
 end
 
@@ -468,6 +476,48 @@ function update_players()
 
     playerA.spr_counter = playerA.spr_counter + PLAYER_ANIMATION_MOVE_SPEED
     playerB.spr_counter = playerB.spr_counter + PLAYER_ANIMATION_MOVE_SPEED
+
+    update_weapon_switch()
+end
+
+function update_weapon_switch()
+    if not switching_weapons then
+        return
+    end
+
+    if playerA.fire_mode == FIRE_PARTICLE then
+        player_p = playerA
+        player_w = playerB
+    else
+        player_p = playerB
+        player_w = playerA
+    end
+
+    local delta = switching_weapons_time / MAX_SWITCHING_WEAPONS_TIME
+
+    weapon_particle_gun.x = player_p.x + (player_w.x - player_p.x) * delta
+    weapon_particle_gun.y = player_p.y + (player_w.y - player_p.y) * delta
+
+    weapon_wave_gun.x = player_w.x + (player_p.x - player_w.x) * delta
+    weapon_wave_gun.y = player_w.y + (player_p.y - player_w.y) * delta
+
+    switching_weapons_time = switching_weapons_time - 1
+
+    if switching_weapons_time == 0 then
+        temp = playerA.fire_mode
+        playerA.fire_mode = playerB.fire_mode
+        playerB.fire_mode = temp
+        switching_weapons = false
+    end
+end
+
+function draw_weapon_switch()
+    if not switching_weapons then
+        return
+    end
+
+    spr(SPRITE_PARTICLE_GUN, weapon_particle_gun.x - cam.x, weapon_particle_gun.y - cam.y, BLACK)
+    spr(SPRITE_WAVE_GUN, weapon_wave_gun.x - cam.x, weapon_wave_gun.y - cam.y, BLACK)
 end
 
 function update_iframes(entity)
@@ -487,7 +537,7 @@ end
 
 function update_weapons()
     for _, player in ipairs({playerA, playerB}) do
-        if player.firing then
+        if not switching_weapons and player.firing then
             if player.fire_mode == FIRE_PARTICLE then
                 player.weapon_state = PLAYER_WEAPON_STATE_FIRE_PARTICLE
                 if player.particle_timer == 0 then
@@ -562,9 +612,8 @@ function handle_input()
     end
     -- Switch weapon fire mode
     if btnp(BUTTON_X) then
-        temp = playerA.fire_mode
-        playerA.fire_mode = playerB.fire_mode
-        playerB.fire_mode = temp
+        switching_weapons = true
+        switching_weapons_time = MAX_SWITCHING_WEAPONS_TIME
     end
     check_tile_effects(playerA)
     check_tile_effects(playerB)
