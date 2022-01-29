@@ -13,6 +13,7 @@ WIDTH = 240
 TILE_SIZE = 8
 TILE_HEIGHT = 77 -- 136 / 8
 TILE_WIDTH = 30 -- 240 / 8
+CAMERA_MAX = 1680 -- map_width - screen_width -> 240*8 - 30*8 = 1680
 
 -- buttons
 BUTTON_UP = 0
@@ -252,7 +253,8 @@ end
 
 function update_camera()
     local player_midpoint = (playerA.x + playerB.x) / 2
-    cam.x = math.max(120, player_midpoint) - 120
+    local cam_x_min = math.max(120, player_midpoint) - 120
+    cam.x = math.min(cam_x_min, CAMERA_MAX)
 end
 
 function movePlayer(player, dx, dy, dir)
