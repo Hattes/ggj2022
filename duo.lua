@@ -80,6 +80,7 @@ FIRE_PARTICLE = 1
 FIRE_WAVE = 2
 PARTICLE_SHOOT_INTERVAL = 60
 PARTICLE_SPEED = 2
+BIRD_SPAWN_RATE = 60
 
 ------ GLOBAL VARIABLES ----------
 t=0
@@ -93,7 +94,7 @@ end
 
 function print_centered(string, y, color, fixed, scale, smallfont)
     y = y or 0
-    color = color or 15
+    color = color or DARK_GREY
     fixed = fixed or false
     scale = scale or 1
     smallfont = smallfont or false
@@ -179,8 +180,6 @@ function restart()
     particles = {}
     spawn_cat(16,14)
     spawn_cat(28,2)
-    spawn_bird(29,6)
-    spawn_bird(29,10)
     wave = {x=0,y=0,firing=false}
 end
 
@@ -212,6 +211,9 @@ function update_game()
     update_players()
     update_enemies()
     update_camera()
+    if t % BIRD_SPAWN_RATE == 0 then
+        spawn_bird()
+    end
 end
 
 function draw_game()
@@ -469,12 +471,15 @@ function spawn_cat(tile_x,tile_y)
     enemies_cat[#enemies_cat+1]=new_cat
 end
 
-function spawn_bird(tile_x,tile_y)
+-- birds are spawned at random tile to the right of the screen
+function spawn_bird()
+    local x = cam.x + WIDTH
+    local tile_y = math.random(15)
     local new_bird = {
         sprite=SPRITE_BIRD1,
-        x=tile_x*8,
+        x=x,
         y=tile_y*8,
-        tileX=tile_x,
+        tileX=x//8,
         tileY=tile_y,
         speed=PLAYER_SPEED,
         flip=1,
@@ -537,7 +542,7 @@ function update_bird(bird, id)
     end
     bird.x = bird.x-1
     if bird.x < cam.x then
-        enemies_bird[id] = nil
+        -- TODO: delete the bird...
     end
 end
 
