@@ -48,9 +48,9 @@ TILE_SOLID = 0
 TILE_DEADLY = 1
 TILE_WINNING = 2
 
--- player states
-PLAYER_STATE_STAND = 1
-PLAYER_STATE_MOVE = 2
+-- entity states
+ENTITY_STATE_STILL = 1
+ENTITY_STATE_MOVE = 2
 PLAYER_WEAPON_STATE_FIRE_NO = 1
 PLAYER_WEAPON_STATE_FIRE_WAVE = 2
 PLAYER_WEAPON_STATE_FIRE_PARTICLE = 3
@@ -74,12 +74,12 @@ SPRITE_WARNING = 340
 
 SPRITE_BOHR_HEAD = 275
 SPRITE_BOHR_BODY = {
-    [PLAYER_STATE_STAND] = {
+    [ENTITY_STATE_STILL] = {
         [PLAYER_WEAPON_STATE_FIRE_NO] = {{sprite=291}},
         [PLAYER_WEAPON_STATE_FIRE_PARTICLE] = {{sprite=308, width=2}},
         [PLAYER_WEAPON_STATE_FIRE_WAVE] = {{sprite=292, width=2}}
     },
-    [PLAYER_STATE_MOVE] = {
+    [ENTITY_STATE_MOVE] = {
         [PLAYER_WEAPON_STATE_FIRE_NO] = {{sprite=294, width=3, width_offset=-8},
                                          {sprite=310, width=3, width_offset=-8}},
         [PLAYER_WEAPON_STATE_FIRE_PARTICLE] = {{sprite=299, width=2}, {sprite=315, width=2}},
@@ -127,6 +127,8 @@ STATE_VICTORY = 5
 
 -- other
 PLAYER_SPEED = 1
+CAT_SPEED = 0.5
+BIRD_SPEED = 1
 VICTORY_WAIT_FRAMES = 300
 FIRE_PARTICLE = 1
 FIRE_WAVE = 2
@@ -250,7 +252,7 @@ function restart()
         bbox=bounding_box({}),
         iframes=0,
         weapon_state=PLAYER_WEAPON_STATE_FIRE_NO,
-        move_state=PLAYER_STATE_STAND,
+        move_state=ENTITY_STATE_STILL,
         spr_counter = 0,
         iframes_max=60,
         sfxs={hurt={id=SFX_HURT, note='E-3'}},
@@ -271,7 +273,7 @@ function restart()
         bbox=bounding_box({}),
         iframes=0,
         weapon_state=PLAYER_WEAPON_STATE_FIRE_NO,
-        move_state=PLAYER_STATE_STAND,
+        move_state=ENTITY_STATE_STILL,
         spr_counter = 0,
         iframes_max=60,
         sfxs={hurt={id=SFX_HURT, note='E-3'}},
@@ -683,32 +685,32 @@ end
 
 function handle_input()
     if btn(BUTTON_UP) and btn(BUTTON_LEFT) then
-        movePlayer(playerA, -PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_LEFT)
-        movePlayer(playerB, -PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_LEFT)
+        moveEntity(playerA, -PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_LEFT)
+        moveEntity(playerB, -PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_LEFT)
     elseif btn(BUTTON_UP) and btn(BUTTON_RIGHT) then
-        movePlayer(playerA,  PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_RIGHT)
-        movePlayer(playerB,  PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_RIGHT)
+        moveEntity(playerA,  PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_RIGHT)
+        moveEntity(playerB,  PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_RIGHT)
     elseif btn(BUTTON_DOWN) and btn(BUTTON_LEFT) then
-        movePlayer(playerA, -PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_LEFT)
-        movePlayer(playerB, -PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_LEFT)
+        moveEntity(playerA, -PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_LEFT)
+        moveEntity(playerB, -PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_LEFT)
     elseif btn(BUTTON_DOWN) and btn(BUTTON_RIGHT) then
-        movePlayer(playerA,  PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_RIGHT)
-        movePlayer(playerB,  PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_RIGHT)
+        moveEntity(playerA,  PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_RIGHT)
+        moveEntity(playerB,  PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_RIGHT)
     elseif btn(BUTTON_UP) then
-        movePlayer(playerA,             0, -PLAYER_SPEED, DIR_UP)
-        movePlayer(playerB,             0,  PLAYER_SPEED, DIR_DOWN)
+        moveEntity(playerA,             0, -PLAYER_SPEED, DIR_UP)
+        moveEntity(playerB,             0,  PLAYER_SPEED, DIR_DOWN)
     elseif btn(BUTTON_DOWN) then
-        movePlayer(playerA,             0,  PLAYER_SPEED, DIR_DOWN)
-        movePlayer(playerB,             0, -PLAYER_SPEED, DIR_UP)
+        moveEntity(playerA,             0,  PLAYER_SPEED, DIR_DOWN)
+        moveEntity(playerB,             0, -PLAYER_SPEED, DIR_UP)
     elseif btn(BUTTON_LEFT) then
-        movePlayer(playerA, -PLAYER_SPEED,             0, DIR_LEFT)
-        movePlayer(playerB, -PLAYER_SPEED,             0, DIR_LEFT)
+        moveEntity(playerA, -PLAYER_SPEED,             0, DIR_LEFT)
+        moveEntity(playerB, -PLAYER_SPEED,             0, DIR_LEFT)
     elseif btn(BUTTON_RIGHT) then
-        movePlayer(playerA,  PLAYER_SPEED,             0, DIR_RIGHT)
-        movePlayer(playerB,  PLAYER_SPEED,             0, DIR_RIGHT)
+        moveEntity(playerA,  PLAYER_SPEED,             0, DIR_RIGHT)
+        moveEntity(playerB,  PLAYER_SPEED,             0, DIR_RIGHT)
     else
-        playerA.move_state = PLAYER_STATE_STAND
-        playerB.move_state = PLAYER_STATE_STAND
+        playerA.move_state = ENTITY_STATE_STILL
+        playerB.move_state = ENTITY_STATE_STILL
     end
     playerA.tileX = math.floor(playerA.x/8)
     playerA.tileY = math.floor(playerA.y/8)
@@ -771,10 +773,13 @@ end
 function movePlayer(player, dx, dy, dir)
     if player.dead then
         return
+    else
+        moveEntity(player, dx, dy, dir)
     end
+end
 
-    entity = player
-    player.move_state = PLAYER_STATE_MOVE
+function moveEntity(entity, dx, dy, dir)
+    entity.move_state = ENTITY_STATE_MOVE
     if inarray(dir, {DIR_LEFT, DIR_RIGHT}) and not is_entity_next_to_solid(entity, dir) then
         entity.x = entity.x + dx
     elseif inarray(dir, {DIR_UP, DIR_DOWN}) and not is_entity_next_to_solid(entity, dir) then
@@ -887,6 +892,7 @@ end
 
 function spawn_cat(tile_x,tile_y)
     local new_cat = {
+        name=string.format('cat from %d,%d', tile_x, tile_y),
         sprite=SPRITE_CAT_CLOSED,
         x=tile_x*8,
         y=tile_y*8,
@@ -903,6 +909,8 @@ function spawn_cat(tile_x,tile_y)
         death_counter=0,
         iframes=0,
         iframes_max=30,
+        move_state=ENTITY_STATE_STILL,
+        speed=CAT_SPEED
     }
     enemies_cat[#enemies_cat+1]=new_cat
 end
@@ -912,6 +920,7 @@ function spawn_bird()
     local x = cam.x + WIDTH
     local tile_y = math.random(15)
     local new_bird = {
+        name=string.format('bird_from %d,%d', x//8, tile_y),
         sprite=SPRITE_BIRD1,
         x=x,
         y=tile_y*8,
@@ -928,6 +937,8 @@ function spawn_bird()
         death_counter=0,
         iframes=0,
         iframes_max=30,
+        move_state=ENTITY_STATE_MOVE,
+        speed=BIRD_SPEED
     }
     enemies_bird[#enemies_bird+1]=new_bird
 end
@@ -1000,13 +1011,15 @@ function check_weapon_collision(enemy)
 end
 
 function update_cat(cat, id)
-    -- TODO: Something better for the cats to do...
     if t % 60 == 0 then
         if cat.sprite == SPRITE_CAT_CLOSED then
             cat.sprite = SPRITE_CAT_OPEN
         else
             cat.sprite = SPRITE_CAT_CLOSED
         end
+    end
+    if cat.sprite == SPRITE_CAT_OPEN then
+        move_towards_player(cat)
     end
     check_weapon_collision(cat)
     if cat.dead then
@@ -1049,7 +1062,6 @@ function abs_bbox(entity)
           se={x=math.floor(entity.x + entity.bbox.x_max + 0.5), y=math.floor(entity.y + entity.bbox.y_max + 0.5)}}
 end
 function update_bird(bird, id)
-    -- TODO: Something better for the birds to do...
     if t % 20 == 0 then
         if bird.sprite == SPRITE_BIRD1 then
             bird.sprite = SPRITE_BIRD2
@@ -1057,7 +1069,7 @@ function update_bird(bird, id)
             bird.sprite = SPRITE_BIRD1
         end
     end
-    bird.x = bird.x-1
+    bird.x = bird.x-BIRD_SPEED
     if bird.x < cam.x then
         del(enemies_bird, bird)
     end
@@ -1066,6 +1078,43 @@ function update_bird(bird, id)
         del(enemies_bird, bird)
     end
     update_iframes(bird)
+end
+
+function player_to_attack(entity)
+    if entity.y < cam.y + HEIGHT/2 then
+        return playerA
+    else
+        return playerB
+    end
+end
+
+function get_direction_to_player(enemy, player)
+  if math.abs(player.y - enemy.y) > math.abs(player.x - enemy.x) then
+    if player.y > enemy.y then
+      return DIR_DOWN
+    else
+      return DIR_UP
+    end
+  else
+    if player.x > enemy.x then
+      return DIR_RIGHT
+    else
+      return DIR_LEFT
+    end
+  end
+end
+
+function move_towards_player(enemy)
+    local player = player_to_attack(enemy)
+    local dir = get_direction_to_player(enemy, player)
+    local delta = enemy.speed
+    if inarray(dir, {DIR_LEFT, DIR_UP}) then
+        delta = -enemy.speed
+    end
+    if not is_entity_next_to_solid(enemy, dir) then
+        moveEntity(enemy, delta, delta, dir)
+        --trace(string.format('%s move %d in dir %d',enemy.name, delta, dir))
+    end
 end
 
 -- <TILES>
