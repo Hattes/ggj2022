@@ -478,22 +478,30 @@ function update_players()
     handle_input()
     update_weapons()
 
-    check_radiation_collision(playerA)
-    check_radiation_collision(playerB)
-
-    update_iframes(playerA)
-    update_iframes(playerB)
-    if playerA.dead then
-        game_over()
+    for _, player in ipairs({playerA, playerB}) do
+        check_radiation_collision(player)
+        check_enemy_collision(player)
+        update_iframes(player)
+        if player.dead then
+            game_over()
+        end
+        player.spr_counter = player.spr_counter + PLAYER_ANIMATION_MOVE_SPEED
     end
-    if playerB.dead then
-        game_over()
-    end
-
-    playerA.spr_counter = playerA.spr_counter + PLAYER_ANIMATION_MOVE_SPEED
-    playerB.spr_counter = playerB.spr_counter + PLAYER_ANIMATION_MOVE_SPEED
 
     update_weapon_switch()
+end
+
+function check_enemy_collision(player)
+    for _, cat in ipairs(enemies_cat) do
+        if entity_collision(player, cat) then
+            hurt_entity(player)
+        end
+    end
+    for _, bird in ipairs(enemies_bird) do
+        if entity_collision(player, bird) then
+            hurt_entity(player)
+        end
+    end
 end
 
 function update_weapon_switch()
