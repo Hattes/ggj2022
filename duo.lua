@@ -572,7 +572,8 @@ end
 
 function update_camera()
     local player_midpoint = (playerA.x + playerB.x) / 2
-    local cam_x_min = math.max(120, player_midpoint) - 120
+    local track_point = player_midpoint + 40
+    local cam_x_min = math.max(120, track_point) - 120
     cam.x = math.min(cam_x_min, CAMERA_MAX)
 end
 
