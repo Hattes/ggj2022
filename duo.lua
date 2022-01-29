@@ -135,7 +135,7 @@ function restart()
     playerA = {
         x=8,
         y=8,
-        tileX=1,
+        tileX=2,
         tileY=1,
         speed=PLAYER_SPEED,
     }
@@ -168,8 +168,14 @@ end
 function draw_game()
     cls(LIGHT_GREY)
     map()
-    spr(DANSK,playerA.x,playerA.y,BLACK,1,0,0,1,1)
-    spr(DANSK,playerB.x,playerB.y,BLACK,1,0,0,1,1)
+    draw_bohr(playerA)
+    draw_bohr(playerB)
+end
+
+-- saved position is feet but we need to use position for head
+function draw_bohr(player)
+    local y = player.y - 8
+    spr(BOHR,player.x,y,BLACK,1,0,0,1,2)
 end
 
 function handle_input()
