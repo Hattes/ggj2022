@@ -205,9 +205,8 @@ function restart()
     enemies_cat = {}
     enemies_bird = {}
     switching_weapons = false
-    switching_weapons_time = 0
-    weapon_wave_gun = {x=0, y=0}
-    weapon_particle_gun = {x=0, y=0}
+    weapon_wave_gun = {x=0, y=0, bbox=bounding_box({})}
+    weapon_particle_gun = {x=0, y=0, bbox=bounding_box({})}
     playerA = {
         x=16,
         y=16,
@@ -485,6 +484,8 @@ function update_weapon_switch()
         return
     end
 
+    local player_p
+    local player_w
     if playerA.fire_mode == FIRE_PARTICLE then
         player_p = playerA
         player_w = playerB
@@ -493,22 +494,26 @@ function update_weapon_switch()
         player_w = playerA
     end
 
-    local delta = switching_weapons_time / MAX_SWITCHING_WEAPONS_TIME
+    weapon_follow(weapon_particle_gun, player_w)
+    weapon_follow(weapon_wave_gun, player_p)
 
-    weapon_particle_gun.x = player_p.x + (player_w.x - player_p.x) * delta
-    weapon_particle_gun.y = player_p.y + (player_w.y - player_p.y) * delta
-
-    weapon_wave_gun.x = player_w.x + (player_p.x - player_w.x) * delta
-    weapon_wave_gun.y = player_w.y + (player_p.y - player_w.y) * delta
-
-    switching_weapons_time = switching_weapons_time - 1
-
-    if switching_weapons_time == 0 then
+    if entity_collision(player_p, weapon_wave_gun) and 
+       entity_collision(player_w, weapon_particle_gun)  then
         temp = playerA.fire_mode
         playerA.fire_mode = playerB.fire_mode
         playerB.fire_mode = temp
         switching_weapons = false
     end
+end
+
+function weapon_follow(weapon, player)
+    local norm_x = (player.x - weapon.x) / WIDTH
+    local norm_y = (player.y - weapon.y) / HEIGHT
+    local dir = math.atan2(norm_y, norm_x)
+    local dx = math.cos(dir) * 1.5
+    local dy = math.sin(dir) * 1.5
+    weapon.x = weapon.x + dx
+    weapon.y = weapon.y + dy
 end
 
 function draw_weapon_switch()
@@ -612,11 +617,30 @@ function handle_input()
     end
     -- Switch weapon fire mode
     if btnp(BUTTON_X) then
-        switching_weapons = true
-        switching_weapons_time = MAX_SWITCHING_WEAPONS_TIME
+        start_switching_weapons()
     end
     check_tile_effects(playerA)
     check_tile_effects(playerB)
+end
+
+function start_switching_weapons()
+    switching_weapons = true
+
+    local player_p
+    local player_w
+    if playerA.fire_mode == FIRE_PARTICLE then
+        player_p = playerA
+        player_w = playerB
+    else
+        player_p = playerB
+        player_w = playerA
+    end
+
+    weapon_wave_gun.x = player_w.x
+    weapon_wave_gun.y = player_w.y
+
+    weapon_particle_gun.x = player_p.x
+    weapon_particle_gun.y = player_p.y
 end
 
 function update_camera()
