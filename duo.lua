@@ -252,7 +252,7 @@ function restart()
 end
 
 function update_game_over()
-    if btn(BUTTON_Z) then
+    if btnp(BUTTON_Z) then
         state = STATE_GAME_STARTING
     end
 end
