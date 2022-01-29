@@ -217,6 +217,9 @@ function restart()
         weapon_state=PLAYER_WEAPON_STATE_FIRE_NO,
         move_state=PLAYER_STATE_STAND,
         spr_counter = 0,
+        iframes_max=60,
+        sfxs={hurt=SFX_HURT},
+        dead=false,
     }
     playerB = {
         x=8,
@@ -234,6 +237,9 @@ function restart()
         weapon_state=PLAYER_WEAPON_STATE_FIRE_NO,
         move_state=PLAYER_STATE_STAND,
         spr_counter = 0,
+        iframes_max=60,
+        sfxs={hurt=SFX_HURT},
+        dead=false,
     }
     state = STATE_GAME
     cam = {x=0,y=0}
@@ -453,21 +459,27 @@ function update_players()
 
     update_iframes(playerA)
     update_iframes(playerB)
+    if playerA.dead then
+        game_over()
+    end
+    if playerB.dead then
+        game_over()
+    end
 end
 
-function update_iframes(player)
-    player.iframes = math.max(player.iframes - 1, 0)
+function update_iframes(entity)
+    entity.iframes = math.max(entity.iframes - 1, 0)
 end
 
 function check_radiation_collision(player)
     if player.x < radiation_x then
-        kill_player(player)
+        kill_entity(player)
     end
 end
 
-function kill_player(player)
+function kill_entity(entity)
     -- TODO: Add death animation
-    game_over()
+    entity.dead = true
 end
 
 function update_weapons()
@@ -634,23 +646,23 @@ end
 function check_tile_effects(player)
     tile_id = mget(player.tileX, player.tileY)
     if fget(tile_id, TILE_DEADLY) then
-        hurt_player(player)
+        hurt_entity(player)
     elseif fget(tile_id, TILE_WINNING) then
         victory()
     end
 end
 
-function hurt_player(player)
-    if player.iframes > 0 then
+function hurt_entity(entity)
+    if entity.iframes > 0 then
         return
     end
 
-    player.iframes = 60
+    entity.iframes = entity.iframes_max
     sfx(SFX_HURT)
-    player.health = player.health - 1
+    entity.health = entity.health - 1
 
-    if player.health == 0 then
-        kill_player(player)
+    if entity.health == 0 then
+        kill_entity(entity)
     end
 end
 
@@ -678,6 +690,10 @@ function spawn_cat(tile_x,tile_y)
         tile_height=2,
         bbox=bounding_box({}),
         health=2,
+        sfxs={hurt=SFX_HURT},
+        dead=false,
+        iframes=0,
+        iframes_max=30,
     }
     enemies_cat[#enemies_cat+1]=new_cat
 end
@@ -698,6 +714,10 @@ function spawn_bird()
         tile_height=1,
         bbox=bounding_box({}),
         health=1,
+        sfxs={hurt=SFX_HURT},
+        dead=false,
+        iframes=0,
+        iframes_max=30,
     }
     enemies_bird[#enemies_bird+1]=new_bird
 end
@@ -712,6 +732,9 @@ function draw_enemies()
 end
 
 function draw_enemy(enemy)
+    if math.fmod(enemy.iframes, 2) == 1 then
+        return
+    end
     spr(enemy.sprite,
         enemy.x-cam.x,
         enemy.y-cam.y,
@@ -726,11 +749,9 @@ end
 function update_enemies()
   for id, cat in ipairs(enemies_cat) do
       update_cat(cat, id)
-      check_weapon_collision(cat)
   end
   for id, bird in ipairs(enemies_bird) do
       update_bird(bird, id)
-      check_weapon_collision(bird)
   end
 end
 
@@ -738,13 +759,13 @@ function check_weapon_collision(enemy)
     enemy_bbox = abs_bbox(enemy)
     for _, particle in ipairs(particles) do
         if entity_collision(enemy, particle) then
-            print("hit", 180, 120, WHITE)
+            hurt_entity(enemy)
         end
     end
     wave_bbox = {x_min=wave.x, x_max=240+cam.x, y_min=wave.y-3, y_max=wave.y+3}
     if intersect(wave.x, 240+cam.x, wave.y-3, wave.y+3,
                  enemy_bbox.nw.x, enemy_bbox.ne.x, enemy_bbox.nw.y, enemy_bbox.sw.y) then
-        print("hit", 180, 100, RED)
+        hurt_entity(enemy)
     end
 end
 
@@ -757,6 +778,11 @@ function update_cat(cat, id)
             cat.sprite = SPRITE_CAT_CLOSED
         end
     end
+    check_weapon_collision(cat)
+    if cat.dead then
+        del(enemies_cat, cat)
+    end
+    update_iframes(cat)
 end
 
 -- generic collision box relative to upper left pixel
@@ -805,6 +831,11 @@ function update_bird(bird, id)
     if bird.x < cam.x then
         del(enemies_bird, bird)
     end
+    check_weapon_collision(bird)
+    if bird.dead then
+        del(enemies_bird, bird)
+    end
+    update_iframes(bird)
 end
 
 -- <TILES>
