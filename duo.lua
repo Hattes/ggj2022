@@ -293,9 +293,9 @@ end
 
 function draw_game()
     draw_map()
+    draw_enemies()
     draw_bohr(playerA)
     draw_separator()
-    draw_enemies()
     draw_bohr(playerB)
     draw_particles()
     draw_wave()
