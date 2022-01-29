@@ -66,7 +66,11 @@ DIR_UP_RIGHT = 8
 
 ------ GLOBAL VARIABLES ----------
 t=0
-mode="menu"
+STATE_MENU = 1
+STATE_GAME = 2
+STATE_GAME_OVER = 3
+STATE_GAME_STARTING = 4
+state = STATE_MENU
 playerA = {
     x=8,
     y=8,
@@ -95,36 +99,59 @@ end
 
 ------ FUNCTIONS -----------
 function TIC()
-    if mode == "menu" then
-        cls(BLACK)
-        spr(BOHR,0,40,BLACK,6,0,0,1,2)
-        spr(BOHR,192,40,BLACK,6,1,0,1,2)
-        spr(CAT_OPEN,64,88,BLACK,3,0,0,2,2)
-        spr(CAT_CLOSED,128,88,BLACK,3,1,0,2,2)
-        print_centered("The Boring World", 10, ORANGE, false, 2)
-        print_centered("of Niels Bohr", 30, ORANGE, false, 2)
-        print_centered("Based on a true story", 50, ORANGE)
-        print_centered("Press Z to start", 75, ORANGE)
-        if btn(BUTTON_Z) then
-            mode="game"
-        end
-    elseif mode=="game_over" then
-        cls(BLACK)
-        print_centered("GAME OVER :(", 30, GRAY, false, 3)
-        print_centered("Press Z to restart",72)
-        if btn(BUTTON_Z) then
-            mode="game"
-            -- TODO: Reset game values, now position etc is keept.
-        end
-    elseif mode=="game" then
-        handle_input()
-        -- Draw
-        cls(LIGHT_GREY)
-        map()
-        spr(DANSK,playerA.x,playerA.y,BLACK,1,0,0,1,1)
-        spr(DANSK,playerB.x,playerB.y,BLACK,1,0,0,1,1)
+    if state == STATE_MENU then
+        update_menu()
+        draw_menu()
+    elseif state == STATE_GAME_OVER then
+        update_game_over()
+        draw_game_over()
+    elseif state == STATE_GAME then
+        update_game()
+        draw_game()
     end
     t=t+1
+end
+
+function update_menu()
+    if btnp(BUTTON_Z) then
+        state = STATE_GAME
+    end
+end
+
+function draw_menu()
+    cls(BLACK)
+    spr(BOHR,0,40,BLACK,6,0,0,1,2)
+    spr(BOHR,192,40,BLACK,6,1,0,1,2)
+    spr(CAT_OPEN,64,88,BLACK,3,0,0,2,2)
+    spr(CAT_CLOSED,128,88,BLACK,3,1,0,2,2)
+    print_centered("The Boring World", 10, ORANGE, false, 2)
+    print_centered("of Niels Bohr", 30, ORANGE, false, 2)
+    print_centered("Based on a true story", 50, ORANGE)
+    print_centered("Press Z to start", 75, ORANGE)
+end
+
+function update_game_over()
+    if btn(BUTTON_Z) then
+        state = STATE_GAME
+        -- TODO: Reset game values, now position etc is keept.
+    end
+end
+
+function draw_game_over()
+    cls(BLACK)
+    print_centered("GAME OVER :(", 30, GRAY, false, 3)
+    print_centered("Press Z to restart",72)
+end
+
+function update_game()
+    handle_input()
+end
+
+function draw_game()
+    cls(LIGHT_GREY)
+    map()
+    spr(DANSK,playerA.x,playerA.y,BLACK,1,0,0,1,1)
+    spr(DANSK,playerB.x,playerB.y,BLACK,1,0,0,1,1)
 end
 
 function handle_input()
@@ -237,7 +264,7 @@ end
 
 function game_over()
     trace("GAME OVER!")
-    mode="game_over"
+    state = STATE_GAME_OVER
 end
 
 function print_centered(string, y, color, fixed, scale, smallfont)
