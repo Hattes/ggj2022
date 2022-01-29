@@ -71,21 +71,6 @@ STATE_GAME = 2
 STATE_GAME_OVER = 3
 STATE_GAME_STARTING = 4
 state = STATE_MENU
-playerA = {
-    x=8,
-    y=8,
-    tileX=1,
-    tileY=1,
-    speed=PLAYER_SPEED,
-}
-playerB = {
-    x=8,
-    y=HEIGHT-16,
-    tileX=1,
-    tileY=TILE_HEIGHT - 2,
-    speed=PLAYER_SPEED,
-}
-
 ------ UTILITIES ------
 
 function inarray(needle, haystack)
@@ -102,6 +87,8 @@ function TIC()
     if state == STATE_MENU then
         update_menu()
         draw_menu()
+    elseif state == STATE_GAME_STARTING then
+        restart()
     elseif state == STATE_GAME_OVER then
         update_game_over()
         draw_game_over()
@@ -114,7 +101,7 @@ end
 
 function update_menu()
     if btnp(BUTTON_Z) then
-        state = STATE_GAME
+        state = STATE_GAME_STARTING
     end
 end
 
@@ -130,10 +117,28 @@ function draw_menu()
     print_centered("Press Z to start", 75, ORANGE)
 end
 
+function restart()
+    -- This is where we set state of players etc. to their initial values
+    playerA = {
+        x=8,
+        y=8,
+        tileX=1,
+        tileY=1,
+        speed=PLAYER_SPEED,
+    }
+    playerB = {
+        x=8,
+        y=HEIGHT-16,
+        tileX=1,
+        tileY=TILE_HEIGHT - 2,
+        speed=PLAYER_SPEED,
+    }
+    state = STATE_GAME
+end
+
 function update_game_over()
     if btn(BUTTON_Z) then
-        state = STATE_GAME
-        -- TODO: Reset game values, now position etc is keept.
+        state = STATE_GAME_STARTING
     end
 end
 
@@ -227,19 +232,19 @@ end
 function is_entity_by_solid(entity, dir, margin)
     if dir == DIR_LEFT then
         left  = is_solid(entity.x - margin,     entity.y)
-             or is_solid(entity.x - margin,     entity.y + 8)
+             or is_solid(entity.x - margin,     entity.y + 7)
         return left
     elseif dir == DIR_RIGHT then
-        right = is_solid(entity.x + 8 + margin, entity.y)
-             or is_solid(entity.x + 8 + margin, entity.y + 8)
+        right = is_solid(entity.x + 7 + margin, entity.y)
+             or is_solid(entity.x + 7 + margin, entity.y + 7)
         return right
     elseif dir == DIR_UP then
         up    = is_solid(entity.x,              entity.y - margin)
-             or is_solid(entity.x + 8,          entity.y - margin)
+             or is_solid(entity.x + 7,          entity.y - margin)
         return up
     elseif dir == DIR_DOWN then
-        down  = is_solid(entity.x,              entity.y + 8 + margin)
-             or is_solid(entity.x + 8,          entity.y + 8 + margin)
+        down  = is_solid(entity.x,              entity.y + 7 + margin)
+             or is_solid(entity.x + 7,          entity.y + 7 + margin)
         return down
     end
 end
