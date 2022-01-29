@@ -55,15 +55,14 @@ PLAYER_WEAPON_STATE_FIRE_WAVE = 2
 PLAYER_WEAPON_STATE_FIRE_PARTICLE = 3
 
 -- sprites
+SPRITE_MENU_CAT_CLOSED = 272
+SPRITE_MENU_CAT_OPEN = 304
+SPRITE_MENU_BOHR = 275
+
 SPRITE_ENTANGLED_BLOCK_A = 120
 SPRITE_ENTANGLED_BLOCK_B = 121
 SPRITE_BLOCK_DISAPPEARED = 354
 SPRITE_DANSK = 256
-SPRITE_CAT_CLOSED = 272
-SPRITE_CAT_OPEN = 304
-SPRITE_BOHR = 275
-SPRITE_BIRD1 = 306
-SPRITE_BIRD2 = 307
 SPRITE_RADIATION_1 = 352
 SPRITE_RADIATION_2 = 353
 SPRITE_HEART = 368
@@ -71,6 +70,13 @@ SPRITE_PARTICLE_GUN = 261
 SPRITE_WAVE_GUN = 260
 SPRITE_WARNING = 340
 
+SPRITE_CAT = {
+    [ENTITY_STATE_STILL] = {{sprite=272, width=2, height=2, height_offset=-8}},
+    [ENTITY_STATE_MOVE] = {{sprite=304, width=2, height=2, height_offset=-8}},
+}
+SPRITE_BIRD = {
+    [ENTITY_STATE_MOVE] = {{sprite=306}, {sprite=307}},
+}
 SPRITE_BOHR_HEAD = 275
 SPRITE_BOHR_BODY = {
     [ENTITY_STATE_STILL] = {
@@ -137,6 +143,7 @@ BIRD_SPAWN_RATE = 60
 NUM_RADIATION_PARTICLES = 256
 MAX_HEALTH = 5
 PLAYER_ANIMATION_MOVE_SPEED = 0.1
+BIRD_ANIMATION_MOVE_SPEED = 0.05
 MAX_SWITCHING_WEAPONS_TIME = 60
 ENTANGLED_BLOCK_A = 120
 ENTANGLED_BLOCK_B = 121
@@ -220,10 +227,10 @@ end
 
 function draw_menu()
     cls(BLACK)
-    spr(SPRITE_BOHR,0,40,BLACK,6,0,0,1,2)
-    spr(SPRITE_BOHR,192,40,BLACK,6,1,0,1,2)
-    spr(SPRITE_CAT_OPEN,64,88,BLACK,3,0,0,2,2)
-    spr(SPRITE_CAT_CLOSED,128,88,BLACK,3,1,0,2,2)
+    spr(SPRITE_MENU_BOHR,0,40,BLACK,6,0,0,1,2)
+    spr(SPRITE_MENU_BOHR,192,40,BLACK,6,1,0,1,2)
+    spr(SPRITE_MENU_CAT_OPEN,64,88,BLACK,3,0,0,2,2)
+    spr(SPRITE_MENU_CAT_CLOSED,128,88,BLACK,3,1,0,2,2)
     print_centered("The Boring World", 10, ORANGE, false, 2)
     print_centered("of Niels Bohr", 30, ORANGE, false, 2)
     print_centered("Based on a true story", 50, ORANGE)
@@ -685,6 +692,8 @@ function shoot_particle(playerX, playerY)
 end
 
 function handle_input()
+    playerA.move_state = ENTITY_STATE_MOVE
+    playerB.move_state = ENTITY_STATE_MOVE
     if btn(BUTTON_UP) and btn(BUTTON_LEFT) then
         moveEntity(playerA, -PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_LEFT)
         moveEntity(playerB, -PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_LEFT)
@@ -772,11 +781,9 @@ function update_camera()
 end
 
 function moveEntity(entity, dx, dy, dir)
-    if entity.dead then
+    if entity.dead or not entity.move_state == ENTITY_STATE_MOVE then
         return
     end
-
-    entity.move_state = ENTITY_STATE_MOVE
     if inarray(dir, {DIR_LEFT, DIR_RIGHT}) and not is_entity_next_to_solid(entity, dir) then
         entity.x = entity.x + dx
     elseif inarray(dir, {DIR_UP, DIR_DOWN}) and not is_entity_next_to_solid(entity, dir) then
@@ -890,15 +897,13 @@ end
 function spawn_cat(tile_x,tile_y)
     local new_cat = {
         name=string.format('cat from %d,%d', tile_x, tile_y),
-        sprite=SPRITE_CAT_CLOSED,
+        sprites=SPRITE_CAT,
         x=tile_x*8,
         y=tile_y*8,
         tileX=tile_x,
         tileY=tile_y,
         speed=PLAYER_SPEED,
         flip=1,
-        tile_width=2,
-        tile_height=2,
         bbox=bounding_box({}),
         health=2,
         sfxs={hurt={id=SFX_ENEMY_HURT, note='C#5'}},
@@ -907,7 +912,8 @@ function spawn_cat(tile_x,tile_y)
         iframes=0,
         iframes_max=30,
         move_state=ENTITY_STATE_STILL,
-        speed=CAT_SPEED
+        speed=CAT_SPEED,
+        spr_counter=0,
     }
     enemies_cat[#enemies_cat+1]=new_cat
 end
@@ -918,15 +924,13 @@ function spawn_bird()
     local tile_y = math.random(15)
     local new_bird = {
         name=string.format('bird_from %d,%d', x//8, tile_y),
-        sprite=SPRITE_BIRD1,
+        sprites=SPRITE_BIRD,
         x=x,
         y=tile_y*8,
         tileX=x//8,
         tileY=tile_y,
         speed=PLAYER_SPEED,
         flip=1,
-        tile_width=1,
-        tile_height=1,
         bbox=bounding_box({}),
         health=1,
         sfxs={hurt={id=SFX_ENEMY_HURT, note='C#5'}},
@@ -935,7 +939,8 @@ function spawn_bird()
         iframes=0,
         iframes_max=30,
         move_state=ENTITY_STATE_MOVE,
-        speed=BIRD_SPEED
+        speed=BIRD_SPEED,
+        spr_counter=0,
     }
     enemies_bird[#enemies_bird+1]=new_bird
 end
@@ -953,15 +958,21 @@ function draw_enemy(enemy)
     if math.fmod(enemy.iframes, 2) == 1 then
         return
     end
-    spr(enemy.sprite,
-        enemy.x-cam.x,
-        enemy.y-cam.y,
+    local body_datas = enemy.sprites[enemy.move_state]
+    local body_data = body_datas[math.floor(enemy.spr_counter) % #body_datas + 1]
+    local width_offset = body_data.width_offset or 0
+    local height_offset = body_data.width_offset or 0
+    local width = body_data.width or 1
+    local height = body_data.height or 1
+    spr(body_data.sprite,
+        enemy.x-cam.x+width_offset,
+        enemy.y-cam.y+height_offset,
         BLACK,
         1,
         enemy.flip,
         0,
-        enemy.tile_width,
-        enemy.tile_height)
+        width,
+        height)
 end
 
 function update_enemies()
@@ -1012,15 +1023,13 @@ end
 
 function update_cat(cat, id)
     if t % 60 == 0 then
-        if cat.sprite == SPRITE_CAT_CLOSED then
-            cat.sprite = SPRITE_CAT_OPEN
+        if cat.move_state == ENTITY_STATE_STILL then
+            cat.move_state = ENTITY_STATE_MOVE
         else
-            cat.sprite = SPRITE_CAT_CLOSED
+            cat.move_state = ENTITY_STATE_STILL
         end
     end
-    if cat.sprite == SPRITE_CAT_OPEN then
-        move_towards_player(cat)
-    end
+    move_towards_player(cat)
     check_weapon_collision(cat)
     if cat.dead then
         del(enemies_cat, cat)
@@ -1062,14 +1071,9 @@ function abs_bbox(entity)
           se={x=math.floor(entity.x + entity.bbox.x_max + 0.5), y=math.floor(entity.y + entity.bbox.y_max + 0.5)}}
 end
 function update_bird(bird, id)
-    if t % 20 == 0 then
-        if bird.sprite == SPRITE_BIRD1 then
-            bird.sprite = SPRITE_BIRD2
-        else
-            bird.sprite = SPRITE_BIRD1
-        end
-    end
+    bird.spr_counter = bird.spr_counter + BIRD_ANIMATION_MOVE_SPEED
     bird.x = bird.x-BIRD_SPEED
+    -- fly outside
     if bird.x < cam.x then
         del(enemies_bird, bird)
     end
