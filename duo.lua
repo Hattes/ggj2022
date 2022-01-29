@@ -494,15 +494,15 @@ function draw_enemy(enemy)
 end
 
 function update_enemies()
-  for _, cat in ipairs(enemies_cat) do
-      update_cat(cat)
+  for id, cat in ipairs(enemies_cat) do
+      update_cat(cat, id)
   end
-  for _, bird in ipairs(enemies_bird) do
-      update_bird(bird)
+  for id, bird in ipairs(enemies_bird) do
+      update_bird(bird, id)
   end
 end
 
-function update_cat(cat)
+function update_cat(cat, id)
     -- TODO: Something better for the cats to do...
     if t % 60 == 0 then
         if cat.sprite == SPRITE_CAT_CLOSED then
@@ -513,7 +513,7 @@ function update_cat(cat)
     end
 end
 
-function update_bird(bird)
+function update_bird(bird, id)
     -- TODO: Something better for the birds to do...
     if t % 20 == 0 then
         if bird.sprite == SPRITE_BIRD1 then
@@ -523,6 +523,9 @@ function update_bird(bird)
         end
     end
     bird.x = bird.x-1
+    if bird.x < cam.x then
+        enemies_bird[id] = nil
+    end
 end
 
 -- <TILES>
