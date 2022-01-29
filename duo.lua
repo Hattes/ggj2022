@@ -113,6 +113,7 @@ function TIC()
         update_game()
         draw_game()
     elseif state == STATE_VICTORY then
+        update_victory()
         draw_victory()
     end
     t=t+1
@@ -168,13 +169,16 @@ function draw_game_over()
     print_centered("Press Z to restart",72)
 end
 
+function update_victory()
+    if t > victory_time + VICTORY_WAIT_FRAMES then
+        state = STATE_MENU
+    end
+end
+
 function draw_victory()
     cls(BLACK)
     print_centered("VICTORY :)", 30, GRAY, false, 3)
     print_centered("Niels escaped from the boring world",72)
-    if t > victory_time + VICTORY_WAIT_FRAMES then
-        state = STATE_MENU
-    end
 end
 
 function update_game()
