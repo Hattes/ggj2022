@@ -77,13 +77,13 @@ state = STATE_MENU
 
 ------ UTILITIES ------
 function print_centered(string, y, color, fixed, scale, smallfont)
-        y = y or 0
-        color = color or 15
-        fixed = fixed or false
-        scale = scale or 1
-        smallfont = smallfont or false
-        local string_width = print(string, -100, -100, color, fixed, scale, smallfont)
-        return print(string, (WIDTH-string_width)//2, y, color, fixed, scale, smallfont)
+    y = y or 0
+    color = color or 15
+    fixed = fixed or false
+    scale = scale or 1
+    smallfont = smallfont or false
+    local string_width = print(string, -100, -100, color, fixed, scale, smallfont)
+    print(string, (WIDTH-string_width)//2, y, color, fixed, scale, smallfont)
 end
 
 function inarray(needle, haystack)
@@ -147,6 +147,7 @@ function restart()
         speed=PLAYER_SPEED,
     }
     state = STATE_GAME
+    cam = {x=0,y=0}
 end
 
 function update_game_over()
@@ -163,11 +164,21 @@ end
 
 function update_game()
     handle_input()
+    update_camera()
 end
 
 function draw_game()
     cls(LIGHT_GREY)
-    map()
+    local tile_x=math.floor(cam.x/8 -1)
+    local tile_y=cam.y/8 -1
+    local x_offset = -cam.x%8-8
+    if cam.x % 8 ~= 0 then
+        x_offset = x_offset - 8
+    end
+    local y_offset = -cam.y%8-8
+    map(tile_x,tile_y,
+        32,18,
+        x_offset, y_offset)
     draw_bohr(playerA)
     draw_bohr(playerB)
 end
@@ -175,7 +186,7 @@ end
 -- saved position is feet but we need to use position for head
 function draw_bohr(player)
     local y = player.y - 8
-    spr(BOHR,player.x,y,BLACK,1,0,0,1,2)
+    spr(BOHR,player.x-cam.x,y,BLACK,1,0,0,1,2)
 end
 
 function handle_input()
@@ -218,6 +229,11 @@ function handle_input()
     playerA.tileY = math.floor(playerA.y/8)
     playerB.tileX = math.floor(playerB.x/8)
     playerB.tileY = math.floor(playerB.y/8)
+end
+
+function update_camera()
+    local player_midpoint = 0
+    cam.x = math.max(120, playerA.x) - 120
 end
 
 function movePlayer(player, dx, dy, dir)
