@@ -497,7 +497,7 @@ function update_weapons()
             elseif player.fire_mode == FIRE_WAVE then
                 player.weapon_state = PLAYER_WEAPON_STATE_FIRE_WAVE
                 wave.firing = true
-                wave.x = player.x + 8
+                wave.x = player.x + 11
                 wave.y = player.y
             end
         else
@@ -513,7 +513,7 @@ end
 
 function shoot_particle(playerX, playerY)
     x = playerX + 8
-    y = playerY + 4
+    y = playerY + 2
     particles[#particles+1] = {x=x,y=y, bbox=bounding_box({})}
 end
 
