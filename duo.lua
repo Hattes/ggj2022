@@ -74,6 +74,10 @@ STATE_VICTORY = 5
 -- other
 PLAYER_SPEED = 1
 VICTORY_WAIT_FRAMES = 300
+FIRE_PARTICLE = 1
+FIRE_WAVE = 2
+PARTICLE_SHOOT_INTERVAL = 60
+PARTICLE_SPEED = 2
 
 ------ GLOBAL VARIABLES ----------
 t=0
@@ -146,6 +150,8 @@ function restart()
         tileX=2,
         tileY=1,
         speed=PLAYER_SPEED,
+        particle_timer=0,
+        fire_mode=FIRE_PARTICLE,
     }
     playerB = {
         x=8,
@@ -153,9 +159,12 @@ function restart()
         tileX=1,
         tileY=TILE_HEIGHT - 2,
         speed=PLAYER_SPEED,
+        particle_timer=0,
+        fire_mode=FIRE_WAVE,
     }
     state = STATE_GAME
     cam = {x=0,y=0}
+    particles = {}
 end
 
 function update_game_over()
@@ -183,11 +192,18 @@ function draw_victory()
 end
 
 function update_game()
-    handle_input()
+    update_players()
     update_camera()
 end
 
 function draw_game()
+    draw_map()
+    draw_bohr(playerA)
+    draw_bohr(playerB)
+    draw_particles()
+end
+
+function draw_map()
     cls(LIGHT_GREY)
     local tile_x=math.floor(cam.x/8 -1)
     local tile_y=cam.y/8 -1
@@ -199,8 +215,6 @@ function draw_game()
     map(tile_x,tile_y,
         32,18,
         x_offset, y_offset)
-    draw_bohr(playerA)
-    draw_bohr(playerB)
 end
 
 -- saved position is feet but we need to use position for head
@@ -209,17 +223,46 @@ function draw_bohr(player)
     spr(BOHR,player.x-cam.x,y,BLACK,1,0,0,1,2)
 end
 
-function handle_input()
-    -- buttons:
-    -- up       0
-    -- down     1
-    -- left     2
-    -- right    3
-    -- z        4
-    -- x        5
-    -- a        6
-    -- s        7
+function draw_particles()
+    for _, particle in ipairs(particles) do
+        rect(particle.x, particle.y, 2, 2, RED)
+    end
+end
 
+function update_players()
+    handle_input()
+    update_weapons()
+end
+
+function update_weapons()
+    for _, player in ipairs({playerA, playerB}) do
+        if player.firing then
+            if player.fire_mode == FIRE_PARTICLE then
+                if player.particle_timer == 0 then
+                    shoot_particle(player.x, player.y)
+                    player.particle_timer = PARTICLE_SHOOT_INTERVAL
+                end
+            elseif player.fire_mode == FIRE_WAVE then
+            end
+        end
+        player.particle_timer = math.max(0, player.particle_timer-1) -- count down once each frame
+    end
+    for _, particle in ipairs(particles) do
+        update_particle(particle)
+    end
+end
+
+function shoot_particle(playerX, playerY)
+    x = playerX + 8
+    y = playerY + 4
+    particles[#particles+1] = {x=x,y=y}
+end
+
+function update_particle(particle)
+    particle.x = particle.x + PARTICLE_SPEED
+end
+
+function handle_input()
     if btn(BUTTON_UP) and btn(BUTTON_LEFT) then
         movePlayer(playerA, -PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_LEFT)
         movePlayer(playerB, -PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_LEFT)
@@ -249,6 +292,13 @@ function handle_input()
     playerA.tileY = math.floor(playerA.y/8)
     playerB.tileX = math.floor(playerB.x/8)
     playerB.tileY = math.floor(playerB.y/8)
+    if btn(BUTTON_X) then
+        playerA.firing = true
+        playerB.firing = true
+    else
+        playerA.firing = false
+        playerB.firing = false
+    end
 end
 
 function update_camera()
