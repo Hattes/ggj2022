@@ -70,6 +70,7 @@ SPRITE_RADIATION_2 = 353
 SPRITE_HEART = 368
 SPRITE_PARTICLE_GUN = 261
 SPRITE_WAVE_GUN = 260
+SPRITE_WARNING = 340
 
 SPRITE_BOHR_HEAD = 275
 SPRITE_BOHR_BODY = {
@@ -228,6 +229,7 @@ function draw_menu()
 end
 
 function restart()
+    t = 0
     -- This is where we set state of players etc. to their initial values
     enemies_cat = {}
     enemies_bird = {}
@@ -235,8 +237,8 @@ function restart()
     weapon_wave_gun = {x=0, y=0, bbox=bounding_box({})}
     weapon_particle_gun = {x=0, y=0, bbox=bounding_box({})}
     playerA = {
-        x=16,
-        y=16,
+        x=28,
+        y=24,
         tileX=2,
         tileY=1,
         speed=PLAYER_SPEED,
@@ -256,7 +258,7 @@ function restart()
         death_counter=0,
     }
     playerB = {
-        x=16,
+        x=28,
         y=HEIGHT-24,
         tileX=1,
         tileY=TILE_HEIGHT - 2,
@@ -343,6 +345,14 @@ function draw_game()
     draw_radiation()
     draw_weapon_switch()
     draw_health()
+    draw_warning()
+end
+
+function draw_warning()
+    if t > 180 or t % 10 > 5 then
+        return
+    end
+    spr(SPRITE_WARNING, 5, 5, BLACK, 1, 0, 0, 2, 2)
 end
 
 function draw_entangled_blocks()
@@ -1201,12 +1211,16 @@ end
 -- 077:00000000000000000000000000cc00000ccfc000cfcdcf00ccccec000ccfcc00
 -- 078:0000000000000000000000000000000000cc00000ccfc000cfcdcf00ccccec00
 -- 079:000000000000000000000000000000000000000000cc00000ccfc000cfcdcf00
+-- 084:0000000f000000f4000000f400000f4400000f440000f4440000f4f4000f4ff4
+-- 085:f00000004f0000004f00000044f0000044f00000444f00004f4f00004ff4f000
 -- 093:00ccc00000000000000000000cccccc0cc0dc0ccc0cccc0cc00dc00ccccccccc
 -- 094:0ccfcc0000ccc00000000000000000000cccccc0cc0dc0ccc0cccc0ccccccccc
 -- 095:ccccfc000ccfcc0000ccc00000000000000000000cccccc0cc0dc0cccccccccc
 -- 096:6666666666666666666666666666666666666666666666666666666666666666
 -- 097:7777777777777777777777777777777777777777777777777777777777777777
 -- 098:0c0c0c0cc00000000000000cc00000000000000cc00000000000000cc0c0c0c0
+-- 100:000ffff400f4444f00f4444f0f4444440f44444ff44444fff44444440fffffff
+-- 101:4ffff000f4444f00f4444f00444444f0f44444f0ff44444f4444444ffffffff0
 -- 109:00000000000000000000000000000000000000000000000000cc00000ccfc000
 -- 110:0000000000000000000000000000000000000000000000000000000000cc0000
 -- 112:02c0220022c22220ccccccc002c2220000c22000000200000000000000000000
