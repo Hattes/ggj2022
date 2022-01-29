@@ -84,8 +84,11 @@ SPRITE_BOHR_BODY = {
 }
 
 -- sound effects
-
 SFX_HURT = 48
+SFX_ENEMY_HURT = 49
+SFX_SHOOT_PARTICLE = 50
+SFX_SWITCH_WEAPON = 51
+SFX_DEATH = 52
 
 -- directions
 DIR_UP = 1
@@ -227,7 +230,7 @@ function restart()
         move_state=PLAYER_STATE_STAND,
         spr_counter = 0,
         iframes_max=60,
-        sfxs={hurt=SFX_HURT},
+        sfxs={hurt={id=SFX_HURT, note='E-3'}},
         dead=false,
     }
     playerB = {
@@ -247,7 +250,7 @@ function restart()
         move_state=PLAYER_STATE_STAND,
         spr_counter = 0,
         iframes_max=60,
-        sfxs={hurt=SFX_HURT},
+        sfxs={hurt={id=SFX_HURT, note='E-3'}},
         dead=false,
     }
     state = STATE_GAME
@@ -483,6 +486,7 @@ function update_players()
         check_enemy_collision(player)
         update_iframes(player)
         if player.dead then
+            sfx(SFX_DEATH, 'D-5', -1, 1, 15, -1)
             game_over()
         end
         player.spr_counter = player.spr_counter + PLAYER_ANIMATION_MOVE_SPEED
@@ -595,6 +599,7 @@ function shoot_particle(playerX, playerY)
     x = playerX + 8
     y = playerY + 1
     particles[#particles+1] = {x=x,y=y, bbox=bounding_box({})}
+    sfx(SFX_SHOOT_PARTICLE, 'F-1', -1, 1)
 end
 
 function handle_input()
@@ -650,6 +655,7 @@ end
 
 function start_switching_weapons()
     switching_weapons = true
+    sfx(SFX_SWITCH_WEAPON, 'C#2', -1, 1)
 
     local player_p
     local player_w
@@ -756,7 +762,7 @@ function hurt_entity(entity)
     end
 
     entity.iframes = entity.iframes_max
-    sfx(SFX_HURT)
+    sfx(entity.sfxs.hurt.id, entity.sfxs.hurt.note, -1, 1)
     entity.health = entity.health - 1
 
     if entity.health == 0 then
@@ -788,7 +794,7 @@ function spawn_cat(tile_x,tile_y)
         tile_height=2,
         bbox=bounding_box({}),
         health=2,
-        sfxs={hurt=SFX_HURT},
+        sfxs={hurt={id=SFX_ENEMY_HURT, note='C#5'}},
         dead=false,
         iframes=0,
         iframes_max=30,
@@ -812,7 +818,7 @@ function spawn_bird()
         tile_height=1,
         bbox=bounding_box({}),
         health=1,
-        sfxs={hurt=SFX_HURT},
+        sfxs={hurt={id=SFX_ENEMY_HURT, note='C#5'}},
         dead=false,
         iframes=0,
         iframes_max=30,
@@ -1104,7 +1110,11 @@ end
 -- 034:0200120032007200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200f200307000000000
 -- 035:03000300230043007300a300d300e300e300e300e300e300e300f300f300f300f300f300f300f300f300f300f300f300f300f300f300f300f300f300307000000000
 -- 039:000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000305000000000
--- 048:440324050406040604070407040614043402540e640d740b840aa40ab409c408d408e408e408e408f408f408f408f408f408f408f408f408f408f408200000000000
+-- 048:440324050406040604070407040614043402540e640d740b840aa40ab409c408d408e408e408e408f408f408f408f408f408f408f408f408f408f408204000000000
+-- 049:42032205020602052202620fb200920282028202b202c202d201d20fe20de20be208e208e208e208e208f208f208f208f208f208f208f208f208f208401000000000
+-- 050:24030404040514066407740764068404a403c402d400d40ec40cc40bc409d408d408e408f408f408f408f408f408f408f408f408f408f408f408f408005000000000
+-- 051:500040002000200020003001400250028000b001b003c006d007d006d006d005e006e007e007e007f007f007f007f007f007f007f007f007f007f007101000000000
+-- 052:22e012e012e00270027002700210021002100200020012001200120012001200120012002200220022002200320032003200420062008200d200f200402000000000
 -- </SFX>
 
 -- <PATTERNS>
