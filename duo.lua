@@ -92,6 +92,22 @@ function add(list, elem)
     list[#list+1] = elem
 end
 
+function del(list, elem)
+    found = false
+    for i=1, #list do
+        if found then
+            list[i-1] = list[i]
+        end
+
+        if list[i] == elem then
+            found = true
+        end
+    end
+    if found then
+        list[#list] = nil
+    end
+end
+
 function print_centered(string, y, color, fixed, scale, smallfont)
     y = y or 0
     color = color or DARK_GREY
@@ -542,7 +558,7 @@ function update_bird(bird, id)
     end
     bird.x = bird.x-1
     if bird.x < cam.x then
-        -- TODO: delete the bird...
+        del(enemies_bird, bird)
     end
 end
 
