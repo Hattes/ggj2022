@@ -48,6 +48,13 @@ TILE_SOLID = 0
 TILE_DEADLY = 1
 TILE_WINNING = 2
 
+-- player states
+PLAYER_STATE_STAND = 1
+PLAYER_STATE_MOVE = 2
+PLAYER_WEAPON_STATE_FIRE_NO = 1
+PLAYER_WEAPON_STATE_FIRE_WAVE = 2
+PLAYER_WEAPON_STATE_FIRE_PARTICLE = 3
+
 -- sprites
 SPRITE_DANSK = 256
 SPRITE_CAT_CLOSED = 272
@@ -58,6 +65,21 @@ SPRITE_BIRD2 = 307
 SPRITE_RADIATION_1 = 352
 SPRITE_RADIATION_2 = 353
 SPRITE_HEART = 368
+
+SPRITE_BOHR_HEAD = 275
+SPRITE_BOHR_BODY = {
+    [PLAYER_STATE_STAND] = {
+        [PLAYER_WEAPON_STATE_FIRE_NO] = {{sprite=291}},
+        [PLAYER_WEAPON_STATE_FIRE_PARTICLE] = {{sprite=308, width=2}},
+        [PLAYER_WEAPON_STATE_FIRE_WAVE] = {{sprite=292, width=2}}
+    },
+    [PLAYER_STATE_MOVE] = {
+        [PLAYER_WEAPON_STATE_FIRE_NO] = {{sprite=294, width=3, width_offset=-8},
+                                         {sprite=310, width=3, width_offset=-8}},
+        [PLAYER_WEAPON_STATE_FIRE_PARTICLE] = {{sprite=298}, {sprite=314}},
+        [PLAYER_WEAPON_STATE_FIRE_WAVE] = {{sprite=297}, {sprite=313}}
+    }
+}
 
 -- sound effects
 
@@ -90,6 +112,7 @@ PARTICLE_SPEED = 2
 BIRD_SPAWN_RATE = 60
 NUM_RADIATION_PARTICLES = 256
 MAX_HEALTH = 5
+PLAYER_ANIMATION_MOVE_SPEED = 0.1
 
 ------ GLOBAL VARIABLES ----------
 t=0
@@ -191,6 +214,9 @@ function restart()
         health=MAX_HEALTH,
         bbox=bounding_box({}),
         iframes=0,
+        weapon_state=PLAYER_WEAPON_STATE_FIRE_NO,
+        move_state=PLAYER_STATE_STAND,
+        spr_counter = 0,
     }
     playerB = {
         x=8,
@@ -205,6 +231,9 @@ function restart()
         health=MAX_HEALTH,
         bbox=bounding_box({}),
         iframes=0,
+        weapon_state=PLAYER_WEAPON_STATE_FIRE_NO,
+        move_state=PLAYER_STATE_STAND,
+        spr_counter = 0,
     }
     state = STATE_GAME
     cam = {x=0,y=0}
@@ -290,9 +319,8 @@ function draw_bohr(player)
     if math.fmod(player.iframes, 2) == 1 then
         return
     end
-
-    local y = player.y - 8
-    spr(SPRITE_BOHR,
+    -- draw head
+    spr(SPRITE_BOHR_HEAD,
         player.x-cam.x,
         player.y-cam.y-8, -- saved position is feet but we need to use position for head
         BLACK,
@@ -300,7 +328,21 @@ function draw_bohr(player)
         0,
         0,
         1,
-        2)
+        1)
+    --draw body
+    local body_datas = SPRITE_BOHR_BODY[player.move_state][player.weapon_state]
+    local body_data = body_datas[math.floor(player.spr_counter) % #body_datas + 1]
+    local width_offset = body_data.width_offset or 0
+    local width = body_data.width or 1
+    spr(body_data.sprite,
+        player.x-cam.x+width_offset,
+        player.y-cam.y,
+        BLACK,
+        1,
+        0,
+        0,
+        width,
+        1)
 end
 
 function update_radiation()
@@ -406,25 +448,33 @@ end
 
 function update_weapons()
     for _, player in ipairs({playerA, playerB}) do
-        if player.firing then
-            if player.fire_mode == FIRE_PARTICLE then
-                if player.particle_timer == 0 then
-                    shoot_particle(player.x, player.y)
-                    player.particle_timer = PARTICLE_SHOOT_INTERVAL
-                end
-            elseif player.fire_mode == FIRE_WAVE then
-                wave.firing = true
-                wave.x = player.x + 8
-                wave.y = player.y
-            end
-        else
-            wave.firing = false
-        end
-        player.particle_timer = math.max(0, player.particle_timer-1) -- count down once each frame
+        update_player(player)
     end
     for _, particle in ipairs(particles) do
         update_particle(particle)
     end
+end
+
+function update_player(player)
+    if player.firing then
+        if player.fire_mode == FIRE_PARTICLE then
+            player.weapon_state = PLAYER_WEAPON_STATE_FIRE_PARTICLE
+            if player.particle_timer == 0 then
+                shoot_particle(player.x, player.y)
+                player.particle_timer = PARTICLE_SHOOT_INTERVAL
+            end
+        elseif player.fire_mode == FIRE_WAVE then
+            player.weapon_state = PLAYER_WEAPON_STATE_FIRE_WAVE
+            wave.firing = true
+            wave.x = player.x + 8
+            wave.y = player.y
+        end
+    else
+        player.weapon_state = PLAYER_WEAPON_STATE_FIRE_NO
+        wave.firing = false
+    end
+    player.particle_timer = math.max(0, player.particle_timer-1) -- count down once each frame
+    player.spr_counter = player.spr_counter + PLAYER_ANIMATION_MOVE_SPEED
 end
 
 function shoot_particle(playerX, playerY)
@@ -462,6 +512,9 @@ function handle_input()
     elseif btn(BUTTON_RIGHT) then
         movePlayer(playerA,  PLAYER_SPEED,             0, DIR_RIGHT)
         movePlayer(playerB,  PLAYER_SPEED,             0, DIR_RIGHT)
+    else
+        playerA.move_state = PLAYER_STATE_STAND
+        playerB.move_state = PLAYER_STATE_STAND
     end
     playerA.tileX = math.floor(playerA.x/8)
     playerA.tileY = math.floor(playerA.y/8)
@@ -495,6 +548,7 @@ end
 
 function movePlayer(player, dx, dy, dir)
     entity = player
+    player.move_state = PLAYER_STATE_MOVE
     if inarray(dir, {DIR_LEFT, DIR_RIGHT}) and not is_entity_next_to_solid(entity, dir) then
         entity.x = entity.x + dx
     elseif inarray(dir, {DIR_UP, DIR_DOWN}) and not is_entity_next_to_solid(entity, dir) then
