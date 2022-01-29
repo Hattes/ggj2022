@@ -1110,6 +1110,10 @@ end
 
 function move_towards_player(enemy)
     local player = player_to_attack(enemy)
+    -- skip if player to far away
+    if math.abs(player.x-enemy.x) > WIDTH/2 then
+        return
+    end
     local dir = get_direction_to_player(enemy, player)
     local delta = enemy.speed
     if inarray(dir, {DIR_LEFT, DIR_UP}) then
