@@ -1,6 +1,6 @@
 -- title:  The Boring World of Niels Bohr
 -- author: Torakko, Hattes, sfabian
--- desc:   Help Niels to survive in the boring world
+-- desc:   Help Niels to survive in the boring world! Game made for Global Game Jam 2022.
 -- script: lua
 
 
@@ -49,22 +49,49 @@ DANSK = 256
 CAT_CLOSED = 272
 CAT_OPEN = 304
 BOHR = 275
+HEIGHT = 136
+WIDTH = 240
+TILE_SIZE = 8
+TILE_HEIGHT = 17 -- 136 / 8
+TILE_WIDTH = 30 -- 240 / 8
+PLAYER_SPEED = 1
+DIR_UP = 1
+DIR_DOWN = 2
+DIR_LEFT = 3
+DIR_RIGHT = 4
+DIR_DOWN_LEFT = 5
+DIR_DOWN_RIGHT = 6
+DIR_UP_LEFT = 7
+DIR_UP_RIGHT = 8
 
 ------ GLOBAL VARIABLES ----------
 t=0
 mode="menu"
 playerA = {
-    x=0,
-    y=0,
+    x=8,
+    y=8,
     tileX=1,
     tileY=1,
+    speed=PLAYER_SPEED,
 }
 playerB = {
-    x=0,
-    y=0,
+    x=8,
+    y=HEIGHT-16,
     tileX=1,
     tileY=TILE_HEIGHT - 2,
+    speed=PLAYER_SPEED,
 }
+
+------ UTILITIES ------
+
+function inarray(needle, haystack)
+  for _, hay in ipairs(haystack) do
+    if hay == needle then
+      return true
+    end
+  end
+  return false
+end
 
 ------ FUNCTIONS -----------
 function TIC()
@@ -101,43 +128,103 @@ function TIC()
 end
 
 function handle_input()
-    if btnp(BUTTON_UP) then
-        moveUp(playerA)
-        moveDown(playerB)
-    elseif btnp(BUTTON_DOWN) then
-        moveDown(playerA)
-        moveUp(playerB)
-    elseif btnp(BUTTON_LEFT) then
-        moveLeft(playerA)
-        moveLeft(playerB)
-    elseif btnp(BUTTON_RIGHT) then
-        moveRight(playerA)
-        moveRight(playerB)
+    -- buttons:
+    -- up       0
+    -- down     1
+    -- left     2
+    -- right    3
+    -- z        4
+    -- x        5
+    -- a        6
+    -- s        7
+
+    if btn(BUTTON_UP) and btn(BUTTON_LEFT) then
+        movePlayer(playerA, -PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_LEFT)
+        movePlayer(playerB, -PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_LEFT)
+    elseif btn(BUTTON_UP) and btn(BUTTON_RIGHT) then
+        movePlayer(playerA,  PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_RIGHT)
+        movePlayer(playerB,  PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_RIGHT)
+    elseif btn(BUTTON_DOWN) and btn(BUTTON_LEFT) then
+        movePlayer(playerA, -PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_LEFT)
+        movePlayer(playerB, -PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_LEFT)
+    elseif btn(BUTTON_DOWN) and btn(BUTTON_RIGHT) then
+        movePlayer(playerA,  PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_RIGHT)
+        movePlayer(playerB,  PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_RIGHT)
+    elseif btn(BUTTON_UP) then
+        movePlayer(playerA,             0, -PLAYER_SPEED, DIR_UP)
+        movePlayer(playerB,             0,  PLAYER_SPEED, DIR_DOWN)
+    elseif btn(BUTTON_DOWN) then
+        movePlayer(playerA,             0,  PLAYER_SPEED, DIR_DOWN)
+        movePlayer(playerB,             0, -PLAYER_SPEED, DIR_UP)
+    elseif btn(BUTTON_LEFT) then
+        movePlayer(playerA, -PLAYER_SPEED,             0, DIR_LEFT)
+        movePlayer(playerB, -PLAYER_SPEED,             0, DIR_LEFT)
+    elseif btn(BUTTON_RIGHT) then
+        movePlayer(playerA,  PLAYER_SPEED,             0, DIR_RIGHT)
+        movePlayer(playerB,  PLAYER_SPEED,             0, DIR_RIGHT)
     end
-    playerA.x = playerA.tileX*8
-    playerA.y = playerA.tileY*8
-    playerB.x = playerB.tileX*8
-    playerB.y = playerB.tileY*8
+    playerA.tileX = math.floor(playerA.x/8)
+    playerA.tileY = math.floor(playerA.y/8)
+    playerB.tileX = math.floor(playerB.x/8)
+    playerB.tileY = math.floor(playerB.y/8)
 end
 
-function moveUp(player)
-    if collision(player.tileX, player.tileY-1) then return end
-    player.tileY = player.tileY - 1
-end
-function moveDown(player)
-    if collision(player.tileX, player.tileY+1) then return end
-    player.tileY = player.tileY + 1
-end
-function moveLeft(player)
-    if collision(player.tileX-1, player.tileY) then return end
-    player.tileX = player.tileX - 1
-end
-function moveRight(player)
-    if collision(player.tileX+1, player.tileY) then return end
-    player.tileX = player.tileX + 1
+function movePlayer(player, dx, dy, dir)
+    entity = player
+    if inarray(dir, {DIR_LEFT, DIR_RIGHT}) and not is_entity_next_to_solid(entity, dir) then
+        entity.x = entity.x + dx
+    elseif inarray(dir, {DIR_UP, DIR_DOWN}) and not is_entity_next_to_solid(entity, dir) then
+        entity.y = entity.y + dy
+    else
+        for diag, diagpart in pairs({[DIR_UP_RIGHT]=  {DIR_UP,   DIR_RIGHT},
+                                     [DIR_UP_LEFT]=   {DIR_UP,   DIR_LEFT},
+                                     [DIR_DOWN_RIGHT]={DIR_DOWN, DIR_RIGHT},
+                                     [DIR_DOWN_LEFT]= {DIR_DOWN, DIR_LEFT}}) do
+            if dir == diag then
+            if not is_entity_next_to_solid(entity, diagpart[1]) then
+                entity.y = entity.y + dy
+            end
+            if not is_entity_next_to_solid(entity, diagpart[2]) then
+                entity.x = entity.x + dx
+            end
+            break
+            end
+        end
+    end
 end
 
-function collision(tileX, tileY)
+function is_entity_next_to_solid(entity, dir)
+  return is_entity_by_solid(entity, dir, entity.speed)
+end
+
+function is_entity_by_solid(entity, dir, margin)
+    if dir == DIR_LEFT then
+        left  = is_solid(entity.x - margin,     entity.y)
+             or is_solid(entity.x - margin,     entity.y + 8)
+        return left
+    elseif dir == DIR_RIGHT then
+        right = is_solid(entity.x + 8 + margin, entity.y)
+             or is_solid(entity.x + 8 + margin, entity.y + 8)
+        return right
+    elseif dir == DIR_UP then
+        up    = is_solid(entity.x,              entity.y - margin)
+             or is_solid(entity.x + 8,          entity.y - margin)
+        return up
+    elseif dir == DIR_DOWN then
+        down  = is_solid(entity.x,              entity.y + 8 + margin)
+             or is_solid(entity.x + 8,          entity.y + 8 + margin)
+        return down
+    end
+end
+
+-- check if pixel coordinate is solid
+function is_solid(x, y)
+  local tile_x = math.floor(x/8)
+  local tile_y = math.floor(y/8)
+  return is_tile_solid(tile_x, tile_y)
+end
+
+function is_tile_solid(tileX, tileY)
     tile_id = mget(tileX, tileY)
     if fget(tile_id, SOLID) then
         return true
