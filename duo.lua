@@ -185,6 +185,7 @@ function restart()
         firing=false,
         begin_firing=false,
         health=MAX_HEALTH,
+        bbox=bounding_box({}),
     }
     playerB = {
         x=8,
@@ -197,6 +198,7 @@ function restart()
         firing=false,
         begin_firing=false,
         health=MAX_HEALTH,
+        bbox=bounding_box({}),
     }
     state = STATE_GAME
     cam = {x=0,y=0}
@@ -405,7 +407,7 @@ end
 function shoot_particle(playerX, playerY)
     x = playerX + 8
     y = playerY + 4
-    particles[#particles+1] = {x=x,y=y}
+    particles[#particles+1] = {x=x,y=y, bbox=bounding_box({})}
 end
 
 function update_particle(particle)
@@ -557,8 +559,9 @@ function spawn_cat(tile_x,tile_y)
         tileY=tile_y,
         speed=PLAYER_SPEED,
         flip=1,
-        width=2,
-        height=2,
+        tile_width=2,
+        tile_height=2,
+        bbox=bounding_box({}),
         health=2,
     }
     enemies_cat[#enemies_cat+1]=new_cat
@@ -576,8 +579,9 @@ function spawn_bird()
         tileY=tile_y,
         speed=PLAYER_SPEED,
         flip=1,
-        width=1,
-        height=1,
+        tile_width=1,
+        tile_height=1,
+        bbox=bounding_box({}),
         health=1,
     }
     enemies_bird[#enemies_bird+1]=new_bird
@@ -600,17 +604,33 @@ function draw_enemy(enemy)
         1,
         enemy.flip,
         0,
-        enemy.width,
-        enemy.height)
+        enemy.tile_width,
+        enemy.tile_height)
 end
 
 function update_enemies()
   for id, cat in ipairs(enemies_cat) do
       update_cat(cat, id)
+      check_weapon_collision(cat)
   end
   for id, bird in ipairs(enemies_bird) do
       update_bird(bird, id)
+      check_weapon_collision(bird)
   end
+end
+
+function check_weapon_collision(enemy)
+    enemy_bbox = abs_bbox(enemy)
+    for _, particle in ipairs(particles) do
+        if entity_collision(enemy, particle) then
+            print("hit", 180, 120, WHITE)
+        end
+    end
+    wave_bbox = {x_min=wave.x, x_max=240+cam.x, y_min=wave.y-3, y_max=wave.y+3}
+    if intersect(wave.x, 240+cam.x, wave.y-3, wave.y+3,
+                 enemy_bbox.nw.x, enemy_bbox.ne.x, enemy_bbox.nw.y, enemy_bbox.sw.y) then
+        print("hit", 180, 100, RED)
+    end
 end
 
 function update_cat(cat, id)
@@ -624,6 +644,39 @@ function update_cat(cat, id)
     end
 end
 
+-- generic collision box relative to upper left pixel
+function bounding_box(values_table)
+  setmetatable(values_table,{__index={x_min=1, x_max=6, y_min=1, y_max=6}})
+  local x_min, x_max, y_min, y_max =
+     values_table[1] or values_table.x_min,
+     values_table[2] or values_table.x_max,
+     values_table[3] or values_table.y_min,
+     values_table[4] or values_table.y_max
+  return {x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max}
+end
+
+function intersect(x1a,x1b,y1a,y1b, x2a,x2b,y2a,y2b)
+    return x1a < x2b and
+           x2a < x1b and
+           y1a < y2b and
+           y2a < y1b
+end
+
+function entity_collision(this, that)
+  local this_bbox = abs_bbox(this)
+  local that_bbox = abs_bbox(that)
+  return intersect(this_bbox.nw.x, this_bbox.ne.x, this_bbox.nw.y, this_bbox.sw.y,
+                   that_bbox.nw.x, that_bbox.ne.x, that_bbox.nw.y, that_bbox.sw.y)
+end
+
+-- Bounding box in absolute coordinates
+function abs_bbox(entity)
+  -- Corners are named north-west, north-east, etc.
+  return {nw={x=math.floor(entity.x + entity.bbox.x_min + 0.5), y=math.floor(entity.y + entity.bbox.y_min + 0.5)},
+          ne={x=math.floor(entity.x + entity.bbox.x_max + 0.5), y=math.floor(entity.y + entity.bbox.y_min + 0.5)},
+          sw={x=math.floor(entity.x + entity.bbox.x_min + 0.5), y=math.floor(entity.y + entity.bbox.y_max + 0.5)},
+          se={x=math.floor(entity.x + entity.bbox.x_max + 0.5), y=math.floor(entity.y + entity.bbox.y_max + 0.5)}}
+end
 function update_bird(bird, id)
     -- TODO: Something better for the birds to do...
     if t % 20 == 0 then
