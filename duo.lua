@@ -177,6 +177,7 @@ function restart()
     spawn_cat(28,2)
     spawn_bird(29,6)
     spawn_bird(29,10)
+    wave = {x=0,y=0,firing=false}
 end
 
 function update_game_over()
@@ -215,6 +216,7 @@ function draw_game()
     draw_bohr(playerA)
     draw_bohr(playerB)
     draw_particles()
+    draw_wave()
 end
 
 function draw_map()
@@ -253,6 +255,25 @@ function draw_particles()
              RED)
     end
 end
+function draw_wave()
+    if not wave.firing then
+        return
+    end
+    local samples = 240
+    local amp = 6
+    local freq = 120
+    local center = wave.y
+
+    local i_f = 240/freq
+    local wave_dx = 240/samples
+    sine_x = 0 - t % 240
+    for x=240, wave.x-cam.x, -wave_dx do
+        line(x,         center-math.sin((sine_x)   /i_f)*amp,
+             x+wave_dx, center-math.sin((sine_x+wave_dx)/i_f)*amp,
+             7)
+        sine_x = sine_x - wave_dx
+    end
+end
 
 function update_players()
     handle_input()
@@ -268,7 +289,12 @@ function update_weapons()
                     player.particle_timer = PARTICLE_SHOOT_INTERVAL
                 end
             elseif player.fire_mode == FIRE_WAVE then
+                wave.firing = true
+                wave.x = player.x + 8
+                wave.y = player.y
             end
+        else
+            wave.firing = false
         end
         player.particle_timer = math.max(0, player.particle_timer-1) -- count down once each frame
     end
