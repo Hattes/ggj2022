@@ -51,12 +51,8 @@ DANSK = 256
 CAT_CLOSED = 272
 CAT_OPEN = 304
 BOHR = 275
-HEIGHT = 136
-WIDTH = 240
-TILE_SIZE = 8
-TILE_HEIGHT = 17 -- 136 / 8
-TILE_WIDTH = 30 -- 240 / 8
-PLAYER_SPEED = 1
+
+-- directions
 DIR_UP = 1
 DIR_DOWN = 2
 DIR_LEFT = 3
@@ -66,14 +62,29 @@ DIR_DOWN_RIGHT = 6
 DIR_UP_LEFT = 7
 DIR_UP_RIGHT = 8
 
------- GLOBAL VARIABLES ----------
-t=0
+-- game states
 STATE_MENU = 1
 STATE_GAME = 2
 STATE_GAME_OVER = 3
 STATE_GAME_STARTING = 4
+
+-- other
+PLAYER_SPEED = 1
+
+------ GLOBAL VARIABLES ----------
+t=0
 state = STATE_MENU
+
 ------ UTILITIES ------
+function print_centered(string, y, color, fixed, scale, smallfont)
+        y = y or 0
+        color = color or 15
+        fixed = fixed or false
+        scale = scale or 1
+        smallfont = smallfont or false
+        local string_width = print(string, -100, -100, color, fixed, scale, smallfont)
+        return print(string, (WIDTH-string_width)//2, y, color, fixed, scale, smallfont)
+end
 
 function inarray(needle, haystack)
   for _, hay in ipairs(haystack) do
@@ -272,16 +283,6 @@ end
 function game_over()
     trace("GAME OVER!")
     state = STATE_GAME_OVER
-end
-
-function print_centered(string, y, color, fixed, scale, smallfont)
-        y = y or 0
-        color = color or 15
-        fixed = fixed or false
-        scale = scale or 1
-        smallfont = smallfont or false
-        local string_width = print(string, -100, -100, color, fixed, scale, smallfont)
-        return print(string, (WIDTH-string_width)//2, y, color, fixed, scale, smallfont)
 end
 
 -- <TILES>
