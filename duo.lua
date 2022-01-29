@@ -290,8 +290,9 @@ function restart()
     radiation_particles = {}
     entangled_blocks = {SPRITE_ENTANGLED_BLOCK_A={},SPRITE_ENTANGLED_BLOCK_B={}}
     local pair_a = LEVELS[1].block_pair_a
-    block_pair_a = {{x=pair_a[1].tile_x*8, y=pair_a[1].tile_y*8, disappeared=false, wave_shot=false},
-                    {x=pair_a[2].tile_x*8, y=pair_a[2].tile_y*8, disappeared=false, wave_shot=false}}
+    block_pair_a = {}
+    --block_pair_a = {{x=pair_a[1].tile_x*8, y=pair_a[1].tile_y*8, disappeared=false, wave_shot=false},
+    --                {x=pair_a[2].tile_x*8, y=pair_a[2].tile_y*8, disappeared=false, wave_shot=false}}
     local pair_b = LEVELS[1].block_pair_b
     block_pair_b = {}
     if not pair_b == nil then
@@ -977,6 +978,9 @@ function update_enemies()
 end
 
 function update_entangled_blocks()
+    if #block_pair_a ~= 2 then
+        return
+    end
     if intersect(wave.x, 240+cam.x, wave.y-4, wave.y+4,
                  block_pair_a[1].x, block_pair_a[1].x+7, block_pair_a[1].y, block_pair_a[1].y+7) then
         block_pair_a[1].wave_shot = true
