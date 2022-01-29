@@ -57,6 +57,7 @@ SPRITE_BIRD1 = 306
 SPRITE_BIRD2 = 307
 SPRITE_RADIATION_1 = 352
 SPRITE_RADIATION_2 = 353
+SPRITE_HEART = 368
 
 -- directions
 DIR_UP = 1
@@ -84,6 +85,7 @@ PARTICLE_SHOOT_INTERVAL = 60
 PARTICLE_SPEED = 2
 BIRD_SPAWN_RATE = 60
 NUM_RADIATION_PARTICLES = 256
+MAX_HEALTH = 5
 
 ------ GLOBAL VARIABLES ----------
 t=0
@@ -182,6 +184,7 @@ function restart()
         fire_mode=FIRE_PARTICLE,
         firing=false,
         begin_firing=false,
+        health=MAX_HEALTH,
     }
     playerB = {
         x=8,
@@ -193,6 +196,7 @@ function restart()
         fire_mode=FIRE_WAVE,
         firing=false,
         begin_firing=false,
+        health=MAX_HEALTH,
     }
     state = STATE_GAME
     cam = {x=0,y=0}
@@ -246,6 +250,18 @@ function draw_game()
     draw_particles()
     draw_wave()
     draw_radiation()
+    draw_health()
+end
+
+function draw_health()
+    draw_health_for_player(playerA, 1)
+    draw_health_for_player(playerB, 129)
+end
+
+function draw_health_for_player(player, y)
+    for i = 1, player.health do
+        spr(SPRITE_HEART, WIDTH + (i - 1) * 9 - MAX_HEALTH * 9, y, BLACK)
+    end
 end
 
 function draw_map()
@@ -686,6 +702,7 @@ end
 -- 065:4403000044f30f0044ffff004ff2f2f04ffffff0ffff1ff0ffffff00fffc0fc0
 -- 096:6666666666666666666666666666666666666666666666666666666666666666
 -- 097:7777777777777777777777777777777777777777777777777777777777777777
+-- 112:02c0220022c22220ccccccc002c2220000c22000000200000000000000000000
 -- </SPRITES>
 
 -- <MAP>
