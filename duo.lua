@@ -465,6 +465,9 @@ function update_players()
     if playerB.dead then
         game_over()
     end
+
+    playerA.spr_counter = playerA.spr_counter + PLAYER_ANIMATION_MOVE_SPEED
+    playerB.spr_counter = playerB.spr_counter + PLAYER_ANIMATION_MOVE_SPEED
 end
 
 function update_iframes(entity)
@@ -484,43 +487,34 @@ end
 
 function update_weapons()
     for _, player in ipairs({playerA, playerB}) do
-        update_player(player)
+        if player.firing then
+            if player.fire_mode == FIRE_PARTICLE then
+                player.weapon_state = PLAYER_WEAPON_STATE_FIRE_PARTICLE
+                if player.particle_timer == 0 then
+                    shoot_particle(player.x, player.y)
+                    player.particle_timer = PARTICLE_SHOOT_INTERVAL
+                end
+            elseif player.fire_mode == FIRE_WAVE then
+                player.weapon_state = PLAYER_WEAPON_STATE_FIRE_WAVE
+                wave.firing = true
+                wave.x = player.x + 8
+                wave.y = player.y
+            end
+        else
+            player.weapon_state = PLAYER_WEAPON_STATE_FIRE_NO
+            wave.firing = false
+        end
+    player.particle_timer = math.max(0, player.particle_timer-1) -- count down once each frame
     end
     for _, particle in ipairs(particles) do
-        update_particle(particle)
+        particle.x = particle.x + PARTICLE_SPEED
     end
-end
-
-function update_player(player)
-    if player.firing then
-        if player.fire_mode == FIRE_PARTICLE then
-            player.weapon_state = PLAYER_WEAPON_STATE_FIRE_PARTICLE
-            if player.particle_timer == 0 then
-                shoot_particle(player.x, player.y)
-                player.particle_timer = PARTICLE_SHOOT_INTERVAL
-            end
-        elseif player.fire_mode == FIRE_WAVE then
-            player.weapon_state = PLAYER_WEAPON_STATE_FIRE_WAVE
-            wave.firing = true
-            wave.x = player.x + 8
-            wave.y = player.y
-        end
-    else
-        player.weapon_state = PLAYER_WEAPON_STATE_FIRE_NO
-        wave.firing = false
-    end
-    player.particle_timer = math.max(0, player.particle_timer-1) -- count down once each frame
-    player.spr_counter = player.spr_counter + PLAYER_ANIMATION_MOVE_SPEED
 end
 
 function shoot_particle(playerX, playerY)
     x = playerX + 8
     y = playerY + 4
     particles[#particles+1] = {x=x,y=y, bbox=bounding_box({})}
-end
-
-function update_particle(particle)
-    particle.x = particle.x + PARTICLE_SPEED
 end
 
 function handle_input()
