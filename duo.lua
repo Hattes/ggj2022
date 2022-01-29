@@ -53,6 +53,8 @@ SPRITE_DANSK = 256
 SPRITE_CAT_CLOSED = 272
 SPRITE_CAT_OPEN = 304
 SPRITE_BOHR = 275
+SPRITE_BIRD1 = 306
+SPRITE_BIRD2 = 307
 
 -- directions
 DIR_UP = 1
@@ -83,7 +85,6 @@ PARTICLE_SPEED = 2
 t=0
 victory_time=0
 state = STATE_MENU
-enemies_cat = {}
 
 ------ UTILITIES ------
 function add(list, elem)
@@ -150,6 +151,7 @@ end
 function restart()
     -- This is where we set state of players etc. to their initial values
     enemies_cat = {}
+    enemies_bird = {}
     playerA = {
         x=8,
         y=8,
@@ -173,6 +175,8 @@ function restart()
     particles = {}
     spawn_cat(16,14)
     spawn_cat(28,2)
+    spawn_bird(29,6)
+    spawn_bird(29,10)
 end
 
 function update_game_over()
@@ -201,6 +205,7 @@ end
 
 function update_game()
     update_players()
+    update_enemies()
     update_camera()
 end
 
@@ -406,15 +411,33 @@ function spawn_cat(tile_x,tile_y)
         flip=1,
         width=2,
         height=2,
-        health=1,
+        health=2,
     }
     enemies_cat[#enemies_cat+1]=new_cat
 end
 
+function spawn_bird(tile_x,tile_y)
+    local new_bird = {
+        sprite=SPRITE_BIRD1,
+        x=tile_x*8,
+        y=tile_y*8,
+        tileX=tile_x,
+        tileY=tile_y,
+        speed=PLAYER_SPEED,
+        flip=1,
+        width=1,
+        height=1,
+        health=1,
+    }
+    enemies_bird[#enemies_bird+1]=new_bird
+end
+
 function draw_enemies()
   for _, cat in ipairs(enemies_cat) do
-      update_cat(cat)
       draw_enemy(cat)
+  end
+  for _, bird in ipairs(enemies_bird) do
+      draw_enemy(bird)
   end
 end
 
@@ -422,12 +445,21 @@ function draw_enemy(enemy)
     spr(enemy.sprite,
         enemy.x-cam.x,
         enemy.y-cam.y,
-        -1,
+        BLACK,
         1,
         enemy.flip,
         0,
         enemy.width,
         enemy.height)
+end
+
+function update_enemies()
+  for _, cat in ipairs(enemies_cat) do
+      update_cat(cat)
+  end
+  for _, bird in ipairs(enemies_bird) do
+      update_bird(bird)
+  end
 end
 
 function update_cat(cat)
@@ -439,6 +471,18 @@ function update_cat(cat)
             cat.sprite = SPRITE_CAT_CLOSED
         end
     end
+end
+
+function update_bird(bird)
+    -- TODO: Something better for the birds to do...
+    if t % 20 == 0 then
+        if bird.sprite == SPRITE_BIRD1 then
+            bird.sprite = SPRITE_BIRD2
+        else
+            bird.sprite = SPRITE_BIRD1
+        end
+    end
+    bird.x = bird.x-1
 end
 
 -- <TILES>
@@ -462,8 +506,8 @@ end
 -- 035:0ffc9cf0fffe9efffffe9efffffefeff4ffffff40ffffff00ff00ff022200222
 -- 048:0000000000000000000000000000000000000000000000000000000400000044
 -- 049:0000000000000000000000000000000000000000000000000000300040003000
--- 050:0008000000880000008800000888800048888880000000000000000000000000
--- 051:0000000000000000088880004888888000888000000880000008000000000000
+-- 050:0000800000008800000088000008888008888884000000000000000000000000
+-- 051:0000000000000000000888800888888400088800000880000000800000000000
 -- 064:0000444400444444004444440004444f000444f400004444000044ff333333ff
 -- 065:4403000044f30f0044ffff004ff2f2f04ffffff0ffff1ff0ffffff00fffc0fc0
 -- </SPRITES>
