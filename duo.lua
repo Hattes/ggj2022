@@ -692,40 +692,8 @@ function shoot_particle(playerX, playerY)
 end
 
 function handle_input()
-    playerA.move_state = ENTITY_STATE_MOVE
-    playerB.move_state = ENTITY_STATE_MOVE
-    if btn(BUTTON_UP) and btn(BUTTON_LEFT) then
-        moveEntity(playerA, -PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_LEFT)
-        moveEntity(playerB, -PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_LEFT)
-    elseif btn(BUTTON_UP) and btn(BUTTON_RIGHT) then
-        moveEntity(playerA,  PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_RIGHT)
-        moveEntity(playerB,  PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_RIGHT)
-    elseif btn(BUTTON_DOWN) and btn(BUTTON_LEFT) then
-        moveEntity(playerA, -PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_LEFT)
-        moveEntity(playerB, -PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_LEFT)
-    elseif btn(BUTTON_DOWN) and btn(BUTTON_RIGHT) then
-        moveEntity(playerA,  PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_RIGHT)
-        moveEntity(playerB,  PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_RIGHT)
-    elseif btn(BUTTON_UP) then
-        moveEntity(playerA,             0, -PLAYER_SPEED, DIR_UP)
-        moveEntity(playerB,             0,  PLAYER_SPEED, DIR_DOWN)
-    elseif btn(BUTTON_DOWN) then
-        moveEntity(playerA,             0,  PLAYER_SPEED, DIR_DOWN)
-        moveEntity(playerB,             0, -PLAYER_SPEED, DIR_UP)
-    elseif btn(BUTTON_LEFT) then
-        moveEntity(playerA, -PLAYER_SPEED,             0, DIR_LEFT)
-        moveEntity(playerB, -PLAYER_SPEED,             0, DIR_LEFT)
-    elseif btn(BUTTON_RIGHT) then
-        moveEntity(playerA,  PLAYER_SPEED,             0, DIR_RIGHT)
-        moveEntity(playerB,  PLAYER_SPEED,             0, DIR_RIGHT)
-    else
-        playerA.move_state = ENTITY_STATE_STILL
-        playerB.move_state = ENTITY_STATE_STILL
-    end
-    playerA.tileX = math.floor(playerA.x/8)
-    playerA.tileY = math.floor(playerA.y/8)
-    playerB.tileX = math.floor(playerB.x/8)
-    playerB.tileY = math.floor(playerB.y/8)
+    handle_move_input(playerA)
+    handle_move_input(playerB)
     for _, player in ipairs({playerA, playerB}) do
         handle_shooting_input(player)
     end
@@ -735,6 +703,31 @@ function handle_input()
     end
     check_tile_effects(playerA)
     check_tile_effects(playerB)
+end
+
+function handle_move_input(player)
+    player.move_state = ENTITY_STATE_MOVE
+    if btn(BUTTON_UP) and btn(BUTTON_LEFT) then
+        moveEntity(player, -PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_LEFT)
+    elseif btn(BUTTON_UP) and btn(BUTTON_RIGHT) then
+        moveEntity(player,  PLAYER_SPEED, -PLAYER_SPEED, DIR_UP_RIGHT)
+    elseif btn(BUTTON_DOWN) and btn(BUTTON_LEFT) then
+        moveEntity(player, -PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_LEFT)
+    elseif btn(BUTTON_DOWN) and btn(BUTTON_RIGHT) then
+        moveEntity(player,  PLAYER_SPEED,  PLAYER_SPEED, DIR_DOWN_RIGHT)
+    elseif btn(BUTTON_UP) then
+        moveEntity(player,             0, -PLAYER_SPEED, DIR_UP)
+    elseif btn(BUTTON_DOWN) then
+        moveEntity(player,             0,  PLAYER_SPEED, DIR_DOWN)
+    elseif btn(BUTTON_LEFT) then
+        moveEntity(player, -PLAYER_SPEED,             0, DIR_LEFT)
+    elseif btn(BUTTON_RIGHT) then
+        moveEntity(player,  PLAYER_SPEED,             0, DIR_RIGHT)
+    else
+        player.move_state = ENTITY_STATE_STILL
+    end
+    player.tileX = math.floor(player.x/8)
+    player.tileY = math.floor(player.y/8)
 end
 
 function handle_shooting_input(player)
