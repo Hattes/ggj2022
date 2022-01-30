@@ -182,7 +182,7 @@ FIRE_WAVE = 2
 PARTICLE_SHOOT_INTERVAL = 60
 PARTICLE_SPEED = 2
 NUM_RADIATION_PARTICLES = 256
-MAX_HEALTH = 5
+MAX_HEALTH = 10
 PLAYER_ANIMATION_MOVE_SPEED = 0.1
 BIRD_ANIMATION_MOVE_SPEED = 0.05
 MAX_SWITCHING_WEAPONS_TIME = 60
@@ -210,8 +210,6 @@ LEVEL_1_ENTITIES = {
         {x=038, y=006},
         {x=052, y=009},
         {x=052, y=001},
-        {x=062, y=009},
-        {x=062, y=001},
         {x=073, y=006},
         {x=069, y=006},
         {x=082, y=003},
@@ -221,8 +219,6 @@ LEVEL_1_ENTITIES = {
         {x=106, y=001},
         {x=113, y=005},
         {x=118, y=002},
-        {x=130, y=002},
-        {x=130, y=010},
         {x=143, y=004},
         {x=143, y=012},
         {x=157, y=006},
@@ -238,8 +234,6 @@ LEVEL_1_ENTITIES = {
         {x=201, y=006},
         {x=204, y=006},
         {x=207, y=006},
-        {x=207, y=013},
-        {x=207, y=010},
         {x=227, y=014},
         {x=227, y=006},
         {x=223, y=014},
@@ -275,7 +269,15 @@ LEVEL_1_ENTITIES = {
         {x=226, y=001},
         {x=226, y=009},
     },
-    rabbits={{x=016,y=002}},
+    rabbits={
+        {x=016,y=002},
+        {x=062, y=009},
+        {x=062, y=001},
+        {x=130, y=002},
+        {x=130, y=010},
+        {x=207, y=013},
+        {x=207, y=010},
+    }
 }
 
 LEVEL_2_ENTITIES = {
@@ -1516,7 +1518,7 @@ function spawn_rabbit(tile_x, tile_y)
         speed=PLAYER_SPEED,
         flip=1,
         bbox=bounding_box({}),
-        health=2,
+        health=3,
         sfxs={hurt={id=SFX_ENEMY_HURT, note='C#5'}},
         dead=false,
         death_counter=0,
