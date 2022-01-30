@@ -644,7 +644,9 @@ end
 
 function update_victory()
     if t > victory_time + VICTORY_WAIT_FRAMES or btnp(BUTTON_Z) then
-        state = STATE_INIT
+        if btnp(BUTTON_Z) then
+            state = STATE_INIT
+        end
     end
 end
 
@@ -656,6 +658,9 @@ function draw_victory()
     rect(191, 70, 2, 2, WHITE)
     print_centered("You finally got the kamelasa!", 72, WHITE)
     print_centered("Niels can now go back to his boring world. ",80, WHITE)
+    if t > victory_time + VICTORY_WAIT_FRAMES or btnp(BUTTON_Z) then
+        print_centered("Press Z to restart",96, WHITE)
+    end
 end
 
 function update_game()
