@@ -3,8 +3,6 @@
 -- desc:   Help Niels to survive in the boring world! Game made for Global Game Jam 2022.
 -- script: lua
 
-music(02)
-
 ------ CONSTANTS ----------
 -- size
 HEIGHT = 136
@@ -126,6 +124,7 @@ DIR_UP_LEFT = 7
 DIR_UP_RIGHT = 8
 
 -- game states
+STATE_INIT = 0
 STATE_MENU = 1
 STATE_GAME = 2
 STATE_GAME_OVER = 3
@@ -239,7 +238,7 @@ LEVEL_ENTITIES = {
 ------ GLOBAL VARIABLES ----------
 t=0
 victory_time=0
-state = STATE_MENU
+state = STATE_INIT
 
 ------ UTILITIES ------
 function add(list, elem)
@@ -283,7 +282,10 @@ end
 
 ------ FUNCTIONS -----------
 function TIC()
-    if state == STATE_MENU then
+    if state == STATE_INIT then
+        music(02)
+        state = STATE_MENU
+    elseif state == STATE_MENU then
         update_menu()
         draw_menu()
     elseif state == STATE_GAME_STARTING then
@@ -303,7 +305,6 @@ end
 
 function update_menu()
     if btnp(BUTTON_Z) then
-        music(00)
         state = STATE_GAME_STARTING
     end
 end
@@ -323,6 +324,7 @@ end
 function restart()
     t = 0
     -- This is where we set state of players etc. to their initial values
+    music(00)
     enemies_cat = {}
     enemies_bird = {}
     switching_weapons = false
@@ -433,7 +435,7 @@ end
 
 function update_victory()
     if t > victory_time + VICTORY_WAIT_FRAMES then
-        state = STATE_MENU
+        state = STATE_INIT
     end
 end
 
