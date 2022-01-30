@@ -661,6 +661,8 @@ function draw_instructions()
 
     draw_kamelasa(110, 20)
     print_with_border("Find the kamelasa", 72, 42)
+    rect(150, 40, 2, 2, WHITE)
+    rect(162, 40, 2, 2, WHITE)
 
     spr(SPRITE_Z_KEY, 90, 64, BLACK, 1, 0, 0, 2, 2)
     print_with_border("Shoot", 112, 70)
