@@ -559,6 +559,7 @@ function restart()
     spawn_blocks()
     spawn_rabbits()
 
+    kamelasa = nil
     if current_level == 3 then
         start_level_3()
     end
@@ -625,6 +626,12 @@ end
 
 function update_game_over()
     if btnp(BUTTON_Z) then
+        state = STATE_GAME_STARTING
+    elseif btnp(BUTTON_A) then
+        current_level = 1
+        state = STATE_GAME_STARTING
+    elseif btnp(BUTTON_S) then
+        current_level = 3
         state = STATE_GAME_STARTING
     end
 end
