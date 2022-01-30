@@ -1398,7 +1398,7 @@ function check_tile_effects(player)
         if fget(tile_id, TILE_DEADLY) then
             hurt_entity(player)
         elseif fget(tile_id, TILE_WINNING) then
-            victory()
+            finish_level()
         end
     end
 end
@@ -1417,9 +1417,20 @@ function hurt_entity(entity)
     end
 end
 
-function victory()
-    state = STATE_VICTORY
-    victory_time = t
+function finish_level()
+    if state == STATE_GAME_STARTING then
+        return
+    end
+    state = STATE_GAME_STARTING
+    if current_level == 2 then
+        current_level = 1
+        trace("goto_1")
+    elseif current_level == 1 then
+        current_level = 3
+        trace("goto_3")
+    else
+        trace('ERROR: Should not be possible to get here....')
+    end
 end
 
 function game_over()
