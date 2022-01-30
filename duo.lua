@@ -815,7 +815,7 @@ end
 function draw_bohr(player)
     if player.dead then
         local index = 1 + math.floor(
-            ((MAX_DEATH_COUNTER - player.death_counter - 1) / MAX_DEATH_COUNTER) *
+            math.max(0, (MAX_DEATH_COUNTER - player.death_counter - 1) / MAX_DEATH_COUNTER) *
             #SPRITE_BOHR_DEATH
         )
         local death_sprite = SPRITE_BOHR_DEATH[index]
