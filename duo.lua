@@ -100,7 +100,9 @@ SPRITE_BOSS = {
     [ENTITY_STATE_STILL] = {{sprite=371, width=4, height=4}},
     [ENTITY_STATE_MOVE] = {{sprite=371, width=4, height=4}},
     [ENTITY_STATE_FROZEN] = {{sprite=435, width=4, height=4}},
-    [ENTITY_STATE_TELEPORTING] = {{sprite=435, width=4, height=4}},
+    [ENTITY_STATE_TELEPORTING] = {
+        {sprite=448, width=1, height=1, width_offset=12, height_offset=12}
+    },
 }
 
 SPRITE_BOHR_HEAD = 275
@@ -1499,7 +1501,7 @@ function update_boss()
                 end
             elseif math.random() > 0.5 then
                 boss.move_state = ENTITY_STATE_TELEPORTING
-                if boss.y < (6 + HEIGHT / 2) then
+                if boss.y < ((HEIGHT / 2) + 6) then
                     boss.dir = DIR_DOWN
                 else
                     boss.dir = DIR_UP
@@ -1956,6 +1958,7 @@ end
 -- 187:3200000032000000320000002000000000000000000000002000000032000000
 -- 189:0000000000000002000000230000002300000232000000200000000000000000
 -- 190:2200000033200000333200003332000023320000233200003320000033200000
+-- 192:0000000000099000009bb90009b99b9009b99b90009bb9000009900000000000
 -- 195:000000000000000000000000000000000000000000000000000000aa00000aaf
 -- 196:00000ccc000000cc00000ddc00000c2d00002ccc00002ccf00aaaacfaaaaaaae
 -- 197:cdccc000cccd0000ddccd0002cccc000ccc22000fcc02000fcaaaa00daaaaaa0
