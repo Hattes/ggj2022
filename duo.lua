@@ -983,6 +983,10 @@ function update_rabbit(rabbit)
         rabbit.flip = 0
     end
     check_weapon_collision(rabbit)
+    if rabbit.dead then
+        del(enemies_rabbit, rabbit)
+    end
+    update_iframes(rabbit)
 end
 function has_active_carrot(rabbit)
     for _, carrot in ipairs(carrots) do
@@ -1343,7 +1347,7 @@ function spawn_rabbit(tile_x, tile_y)
         speed=PLAYER_SPEED,
         flip=1,
         bbox=bounding_box({}),
-        health=1,
+        health=2,
         sfxs={hurt={id=SFX_ENEMY_HURT, note='C#5'}},
         dead=false,
         death_counter=0,
@@ -1355,6 +1359,7 @@ function spawn_rabbit(tile_x, tile_y)
         state_timeout=0,
         id=next_rabbit_id(),
         dir=DIR_LEFT,
+        iframes_max=30,
     }
     enemies_rabbit[#enemies_rabbit+1]=new_rabbit
 end
