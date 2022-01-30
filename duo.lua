@@ -1658,7 +1658,7 @@ function update_boss()
             else
                 boss_shoot_missile(0, -0.6)
                 boss_shoot_missile(24, -0.5)
-                sfx(SFX_HURT, 'F-5', -1, 1, 15, -3)
+                sfx(SFX_HURT, 52 + (5 - boss.health)*2, -1, 1, 15, -3)
             end
         end
     end
