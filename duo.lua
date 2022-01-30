@@ -337,7 +337,7 @@ function TIC()
 end
 
 function update_instructions()
-    if t > 300 or btnp(BUTTON_Z) then
+    if t > 420 or btnp(BUTTON_Z) then
         state = STATE_GAME_STARTING
     end
 end
