@@ -268,6 +268,7 @@ LEVEL_2_ENTITIES = {
     },
     cats={},
     blocks={},
+    rabbits={},
 }
 
 LEVEL_ENTITIES = {
