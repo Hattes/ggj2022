@@ -1114,7 +1114,7 @@ end
 
 function update_break_blocks()
     for _, block in ipairs(break_blocks) do
-        if particle_collision(block) and not block.broken then
+        if not block.broken and particle_collision(block) then
             if block.cracked then
                 block.broken = true
             else
