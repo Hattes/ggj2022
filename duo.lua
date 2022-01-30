@@ -388,7 +388,8 @@ function TIC()
         state = STATE_MENU
     elseif state == STATE_MENU then
         update_menu()
-        draw_menu()
+        --draw_menu()
+        draw_victory()
     elseif state == STATE_INSTRUCTIONS then
         update_instructions()
         draw_instructions()
@@ -650,8 +651,12 @@ end
 
 function draw_victory()
     cls(BLACK)
-    print_centered("VICTORY :)", 30, GRAY, false, 3)
-    print_centered("Niels escaped from the boring world",72)
+    print_centered("VICTORY :)", 30, WHITE, false, 3)
+
+    rect(179, 70, 2, 2, WHITE)
+    rect(191, 70, 2, 2, WHITE)
+    print_centered("You finally got the kamelasa!", 72, WHITE)
+    print_centered("Niels can now go back to his boring world. ",80, WHITE)
 end
 
 function update_game()
