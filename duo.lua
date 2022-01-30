@@ -1554,7 +1554,6 @@ function update_boss()
 
     if boss.move_state == ENTITY_STATE_FROZEN then
         if particle_collision(boss) then
-            sfx(SFX_HURT, 'F-5', -1, 1, 15, -4)
             boss_shoot_missile(0, -0.6)
             boss_shoot_missile(24, -0.5)
             boss.health = boss.health - 1
@@ -1564,6 +1563,14 @@ function update_boss()
                 boss.dir = DIR_DOWN
             else
                 boss.dir = DIR_UP
+            end
+
+            if boss.health == 0 then
+                sfx(SFX_HURT, 'E-4', -1, 0, 15, -4)
+                sfx(SFX_HURT, 'F-4', -1, 1, 15, -4)
+                sfx(SFX_HURT, 'F#4', -1, 2, 15, -4)
+            else
+                sfx(SFX_HURT, 'F-5', -1, 1, 15, -3)
             end
         end
     end
