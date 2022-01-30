@@ -1518,7 +1518,7 @@ function spawn_rabbit(tile_x, tile_y)
         speed=PLAYER_SPEED,
         flip=1,
         bbox=bounding_box({}),
-        health=3,
+        health=2,
         sfxs={hurt={id=SFX_ENEMY_HURT, note='C#5'}},
         dead=false,
         death_counter=0,
