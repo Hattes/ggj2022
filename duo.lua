@@ -152,6 +152,7 @@ SFX_SHOOT_PARTICLE = 50
 SFX_SWITCH_WEAPON = 51
 SFX_DEATH = 52
 SFX_BLOCK = 53
+SFX_MISSILE = 54
 
 -- directions
 DIR_UP = 1
@@ -1485,6 +1486,7 @@ function update_boss()
             if math.random() > 0.8 then
                 boss_shoot_missile(0, 0)
                 boss_shoot_missile(24, 0.1)
+                sfx(SFX_MISSILE, 'C#3', -1, 1, 15, -1)
             elseif math.random() > 0.5 then
                 if math.random() > 0.5 then
                     if (boss.y > (HEIGHT/2) and not (boss.y < (8 + HEIGHT/2))) or
@@ -1501,6 +1503,7 @@ function update_boss()
                 end
             elseif math.random() > 0.8 then
                 boss.move_state = ENTITY_STATE_TELEPORTING
+                sfx(SFX_MISSILE, 'C#4', -1, 1, 15, -2)
                 if boss.y < ((HEIGHT / 2) - 8) then
                     boss.dir = DIR_DOWN
                 else
@@ -1542,6 +1545,7 @@ function update_boss()
 
     if boss.move_state == ENTITY_STATE_MOVE or boss.move_state == ENTITY_STATE_STILL then
         if wave_collision(boss) then
+            sfx(SFX_HURT, 'F-4', -1, 1, 15, -1)
             boss.move_state = ENTITY_STATE_FROZEN
             boss.state_counter = 0
             boss.dir = DIR_LEFT
@@ -1550,6 +1554,7 @@ function update_boss()
 
     if boss.move_state == ENTITY_STATE_FROZEN then
         if particle_collision(boss) then
+            sfx(SFX_HURT, 'F-5', -1, 1, 15, -4)
             boss_shoot_missile(0, -0.6)
             boss_shoot_missile(24, -0.5)
             boss.health = boss.health - 1
@@ -2106,6 +2111,7 @@ end
 -- 051:500040002000200020003001400250028000b001b003c006d007d006d006d005e006e007e007e007f007f007f007f007f007f007f007f007f007f007101000000000
 -- 052:22e012e012e00270027002700210021002100200020012001200120012001200120012002200220022002200320032003200420062008200d200f200402000000000
 -- 053:44033405240614061407340764069403b4028401740154016400840fb40ec40ec40cb40bc40bc40bd40be409f409f408f408f408f408f408f408f408004000000000
+-- 054:71025103410511060106010601060105010401021100210e410a61089109b109c108d108d108d108d108e108e108f109f109f109f109f109f109f109201000000000
 -- </SFX>
 
 -- <PATTERNS>
