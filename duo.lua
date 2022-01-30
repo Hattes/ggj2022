@@ -79,6 +79,11 @@ SPRITE_CARROT = {[ENTITY_STATE_MOVE] = {{sprite=416},
                                         {sprite=416, rotation=180},
                                         {sprite=416, rotation=270}}}
 
+SPRITE_MISSILE = {[ENTITY_STATE_MOVE] = {{sprite=407},
+                                         {sprite=407},
+                                         {sprite=407},
+                                         {sprite=407}}}
+
 SPRITE_CAT = {
     [ENTITY_STATE_STILL] = {{sprite=272, width=2, height=2, height_offset=-8}},
     [ENTITY_STATE_MOVE] = {{sprite=304, width=2, height=2, height_offset=-8}},
@@ -1413,10 +1418,10 @@ function draw_enemies()
   for _, rabbit in ipairs(enemies_rabbit) do
       draw_enemy(rabbit)
   end
+  draw_boss()
   for _, carrot in ipairs(carrots) do
       draw_enemy(carrot)
   end
-  draw_boss()
 end
 
 function draw_enemy(enemy)
@@ -1466,17 +1471,25 @@ function update_boss()
     if boss.move_state == ENTITY_STATE_STILL then
         if boss.state_counter > 30 then
             if math.random() > 0.5 then
-                boss_shoot_missile()
+                boss_shoot_missile(0, 0)
+                boss_shoot_missile(24, 0.1)
             elseif math.random() > 0.5 then
-                boss.move_state = ENTITY_STATE_MOVE
                 if math.random() > 0.5 then
-                    boss.dir = DIR_UP
+                    if (boss.y > (HEIGHT/2) and not (boss.y < (8 + HEIGHT/2))) or
+                        (boss.y < (HEIGHT/2) and not (boss.y < 8)) then
+                        boss.dir = DIR_UP
+                        boss.move_state = ENTITY_STATE_MOVE
+                    end
                 else
-                    boss.dir = DIR_DOWN
+                    if (boss.y > (HEIGHT/2) and not (boss.y > (HEIGHT - 40))) or
+                        (boss.y < (HEIGHT/2) and not (boss.y > ((HEIGHT/2) - 40))) then
+                        boss.dir = DIR_DOWN
+                        boss.move_state = ENTITY_STATE_MOVE
+                    end
                 end
             elseif math.random() > 0.5 then
                 boss.move_state = ENTITY_STATE_TELEPORTING
-                if boss.y < (HEIGHT / 2) then
+                if boss.y < (6 + HEIGHT / 2) then
                     boss.dir = DIR_DOWN
                 else
                     boss.dir = DIR_UP
@@ -1492,13 +1505,13 @@ function update_boss()
             boss.y = boss.y + 0.2
         end
 
-        -- TODO: Make sure boss doesn't collide with walls
         if boss.state_counter > 30 then
             boss.move_state = ENTITY_STATE_STILL
             boss.state_counter = 0
             boss.dir = DIR_LEFT
         end
     elseif boss.move_state == ENTITY_STATE_FROZEN then
+        -- TODO
     elseif boss.move_state == ENTITY_STATE_TELEPORTING then
         if boss.dir == DIR_UP then
             boss.y = boss.y - 1
@@ -1514,9 +1527,24 @@ function update_boss()
     end
 end
 
-function boss_shoot_missile()
-    -- TODO
-    spawn_carrot(boss)
+function boss_shoot_missile(x_offset, speed_offset)
+    add(
+        carrots,
+        {
+            x=boss.x + x_offset,
+            y=boss.y + 13,
+            dir=DIR_LEFT,
+            sprites=SPRITE_MISSILE,
+            spr_counter=0,
+            spr_counter_inc=0.1,
+            bbox=bounding_box{_, x_min=2, x_max=4, y_min=2, y_max=4},
+            state_timeout=0,
+            speed=1 + speed_offset,
+            iframes=0,
+            move_state=ENTITY_STATE_MOVE,
+            name="missile",
+        }
+    )
 end
 
 function draw_boss()
