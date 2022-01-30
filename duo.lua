@@ -61,6 +61,8 @@ SPRITE_MENU_BOHR = 275
 
 SPRITE_ENTANGLED_BLOCK_A = 120
 SPRITE_ENTANGLED_BLOCK_B = 121
+SPRITE_BREAK_BLOCK_INTACT = 136
+SPRITE_BREAK_BLOCK_CRACKED = 137
 SPRITE_BLOCK_DISAPPEARED = 354
 SPRITE_DANSK = 256
 SPRITE_RADIATION_1 = 352
@@ -306,6 +308,17 @@ function restart()
         block_pair_b = {{x=pair_b[1].tile_x*8, y=pair_b[1].tile_y*8, disappeared=false, wave_shot=false},
                         {x=pair_b[2].tile_x*8, y=pair_b[2].tile_y*8, disappeared=false, wave_shot=false}}
     end
+    break_blocks = {}
+    spawn_break_block(11,5)
+end
+
+function spawn_break_block(tile_x, tile_y)
+    add(break_blocks,
+        {x=tile_x*8,
+         y=tile_y*8,
+         cracked=false,
+         broken=false,
+         bbox=bounding_box({x_min=0, x_max=7, y_min=0, y_max=8})})
 end
 
 function update_game_over()
@@ -340,12 +353,14 @@ function update_game()
         spawn_bird()
     end
     update_radiation()
-    update_entangled_blocks()
+    --update_entangled_blocks()
+    update_break_blocks()
 end
 
 function draw_game()
     draw_map()
-    draw_entangled_blocks()
+    --draw_entangled_blocks()
+    draw_break_blocks()
     draw_enemies()
     draw_bohr(playerA)
     draw_separator()
@@ -365,6 +380,17 @@ function draw_warning()
     spr(SPRITE_WARNING, 5, 5, BLACK, 1, 0, 0, 2, 2)
 end
 
+function draw_break_blocks()
+    for _, block in ipairs(break_blocks) do
+        if not block.broken then
+            if block.cracked then
+                spr(SPRITE_BREAK_BLOCK_CRACKED, block.x - cam.x, block.y, BLACK)
+            else
+                spr(SPRITE_BREAK_BLOCK_INTACT, block.x - cam.x, block.y, BLACK)
+            end
+        end
+    end
+end
 function draw_entangled_blocks()
     for _, block in ipairs(block_pair_a) do
         if block.disappeared then
@@ -828,10 +854,10 @@ end
 function is_solid(x, y)
   local tile_x = math.floor(x/8)
   local tile_y = math.floor(y/8)
-  return is_tile_solid(tile_x, tile_y) or tile_has_entangled_block(tile_x, tile_y)
+  return is_tile_solid(tile_x, tile_y) or tile_has_block(tile_x, tile_y)
 end
 
-function tile_has_entangled_block(tile_x, tile_y)
+function tile_has_block(tile_x, tile_y)
     for _, block in ipairs(block_pair_a) do
         if block.x == tile_x * 8 and block.y == tile_y * 8 and not block.disappeared then
             return true
@@ -839,6 +865,11 @@ function tile_has_entangled_block(tile_x, tile_y)
     end
     for _, block in ipairs(block_pair_b) do
         if block.x == tile_x * 8 and block.y == tile_y * 8 and not block.disappeared then
+            return true
+        end
+    end
+    for _, block in ipairs(break_blocks) do
+        if block.x == tile_x * 8 and block.y == tile_y * 8 and not block.broken then
             return true
         end
     end
@@ -981,6 +1012,18 @@ function update_enemies()
   end
 end
 
+function update_break_blocks()
+    for _, block in ipairs(break_blocks) do
+        if particle_collision(block) and not block.broken then
+            if block.cracked then
+                block.broken = true
+            else
+                block.cracked = true
+            end
+        end
+    end
+end
+
 function update_entangled_blocks()
     if #block_pair_a ~= 2 then
         return
@@ -1006,16 +1049,26 @@ function update_entangled_blocks()
 end
 
 function check_weapon_collision(enemy)
-    enemy_bbox = abs_bbox(enemy)
-    for _, particle in ipairs(particles) do
-        if entity_collision(enemy, particle) then
-            hurt_entity(enemy)
-        end
-    end
-    if intersect(wave.x, 240+cam.x, wave.y-3, wave.y+3,
-                 enemy_bbox.nw.x, enemy_bbox.ne.x, enemy_bbox.nw.y, enemy_bbox.sw.y) then
+    if particle_collision(enemy) then
         hurt_entity(enemy)
     end
+    if wave_collision(enemy) then
+        hurt_entity(enemy)
+    end
+end
+function particle_collision(entity)
+    entity_bbox = abs_bbox(entity)
+    for _, particle in ipairs(particles) do
+        if entity_collision(entity, particle) then
+            del(particles, particle)
+            return true
+        end
+    end
+end
+function wave_collision(entity)
+    entity_bbox = abs_bbox(entity)
+    return intersect(wave.x, 240+cam.x, wave.y-3, wave.y+3,
+                     entity_bbox.nw.x, entity_bbox.ne.x, entity_bbox.nw.y, entity_bbox.sw.y)
 end
 
 function update_cat(cat, id)
@@ -1172,6 +1225,8 @@ end
 -- 133:cccccccc0ccc000cc0c00cc0c0c00cc00cc00000c0c00cc0cccccccccccccccc
 -- 134:ccccccccc00c00ccc00000ccc00000ccc0c0c0ccc0ccc0cccccccccccccccccc
 -- 135:f2222222f2222222f2222222f2222222f2222222f2222222f2222222f2222222
+-- 136:022222202dddddd22d3333d22d3333d22d3333d22d3333d22dddddd202222220
+-- 137:0f2222202dfdddd22d3f33d22d3f33d22d3f33d22d33f3d22ddddfd2022222f0
 -- 144:2222222222222222222222222222222222222222222222222222222222222222
 -- 145:22222222222222222222222222222222dfffffffd8888888d8888338d8883883
 -- 146:22222222222222222222222222222222ffffffff888888888888888888888888
