@@ -1043,6 +1043,10 @@ function update_weapons()
     end
     for _, particle in ipairs(particles) do
         particle.x = particle.x + PARTICLE_SPEED
+        particle.time_left = particle.time_left - 1
+        if particle.time_left == 0 then
+            del(particles, particle)
+        end
     end
 end
 
@@ -1070,7 +1074,7 @@ end
 function shoot_particle(playerX, playerY)
     x = playerX + 8
     y = playerY + 1
-    particles[#particles+1] = {x=x,y=y, bbox=bounding_box({})}
+    particles[#particles+1] = {x=x,y=y, bbox=bounding_box({}), time_left=100}
     sfx(SFX_SHOOT_PARTICLE, 'F-1', -1, 1)
 end
 
