@@ -69,6 +69,8 @@ SPRITE_HEART = 368
 SPRITE_PARTICLE_GUN = 261
 SPRITE_WAVE_GUN = 260
 SPRITE_WARNING = 340
+SPRITE_Z_KEY = 343
+SPRITE_X_KEY = 375
 
 SPRITE_CAT = {
     [ENTITY_STATE_STILL] = {{sprite=272, width=2, height=2, height_offset=-8}},
@@ -305,6 +307,9 @@ function TIC()
     elseif state == STATE_MENU then
         update_menu()
         draw_menu()
+    elseif state == STATE_INSTRUCTIONS then
+        update_instructions()
+        draw_instructions()
     elseif state == STATE_GAME_STARTING then
         restart()
     elseif state == STATE_GAME_OVER then
@@ -320,14 +325,26 @@ function TIC()
     t=t+1
 end
 
+function update_instructions()
+    if t > 300 or btnp(BUTTON_Z) then
+        state = STATE_GAME_STARTING
+    end
+end
+
 function update_menu()
     if btnp(BUTTON_Z) then
-        state = STATE_GAME_STARTING
+        start_instructions()
         current_level = 1
     elseif btnp(BUTTON_X) then
-        state = STATE_GAME_STARTING
+        start_instructions()
         current_level = 2
     end
+end
+
+function start_instructions()
+    music()
+    state = STATE_INSTRUCTIONS
+    t = 0
 end
 
 function draw_menu()
@@ -502,6 +519,24 @@ function draw_warning()
         return
     end
     spr(SPRITE_WARNING, 5, 5, BLACK, 1, 0, 0, 2, 2)
+end
+
+function draw_instructions()
+    cls(BLACK)
+
+    spr(SPRITE_Z_KEY, 90, 46, BLACK, 1, 0, 0, 2, 2)
+    print_with_border("Shoot", 112, 51)
+
+    spr(SPRITE_X_KEY, 68, 76, BLACK, 1, 0, 0, 2, 2)
+    print_with_border("Switch weapons", 90, 81)
+end
+
+function print_with_border(text, x, y)
+    print(text, x-1, y, DARK_GREY, false, 1, false)
+    print(text, x, y-1, DARK_GREY, false, 1, false)
+    print(text, x+1, y, DARK_GREY, false, 1, false)
+    print(text, x, y+1, DARK_GREY, false, 1, false)
+    print(text, x, y, WHITE, false, 1, false)
 end
 
 function draw_break_blocks()
@@ -1451,6 +1486,8 @@ end
 -- 079:000000000000000000000000000000000000000000cc00000ccfc000cfcdcf00
 -- 084:0000000f000000f4000000f400000f4400000f440000f4440000f4f4000f4ff4
 -- 085:f00000004f0000004f00000044f0000044f00000444f00004f4f00004ff4f000
+-- 087:0eeeeeeeeeddddddedddddddedddddddedddddddedddddddedddddddeddfffdd
+-- 088:eeeeeee0ddddddeedddddddedddddddedddddddedddddddedddddddeddddddde
 -- 093:00ccc00000000000000000000cccccc0cc0dc0ccc0cccc0cc00dc00ccccccccc
 -- 094:0ccfcc0000ccc00000000000000000000cccccc0cc0dc0ccc0cccc0ccccccccc
 -- 095:ccccfc000ccfcc0000ccc00000000000000000000cccccc0cc0dc0cccccccccc
@@ -1459,11 +1496,15 @@ end
 -- 098:0c0c0c0cc00000000000000cc00000000000000cc00000000000000cc0c0c0c0
 -- 100:000ffff400f4444f00f4444f0f4444440f44444ff44444fff44444440fffffff
 -- 101:4ffff000f4444f00f4444f00444444f0f44444f0ff44444f4444444ffffffff0
+-- 103:eddddfddedddfdddeddfddddeddfffddedddddddeeddddddeeeeeeee0eeeeeee
+-- 104:dddddddedddddddedddddddedddddddedddddddeddddddeeeeeeeeeeeeeeeee0
 -- 109:00000000000000000000000000000000000000000000000000cc00000ccfc000
 -- 110:0000000000000000000000000000000000000000000000000000000000cc0000
 -- 112:02c0220022c22220ccccccc002c2220000c22000000200000000000000000000
 -- 116:0000000000000000000000000000000000000000000000000000c00d00000cdc
 -- 117:000000000000000000000000000000000000000000d000000c00c000ccdc0000
+-- 119:0eeeeeeeeeddddddedddddddedddddddedddddddedddddddedddddddeddfdfdd
+-- 120:eeeeeee0ddddddeedddddddedddddddedddddddedddddddedddddddeddddddde
 -- 125:cfcdcf00ccccfc000ccfcc0000ccc00000000000000000000cccccc0cccccccc
 -- 126:0ccfc000cfcdcf00ccccfc000ccfcc0000ccc0000000000000000000cccccccc
 -- 127:00cc00000ccfc000cfcdcf00ccccfc000ccfcc0000ccc00000000000cccccccc
@@ -1471,6 +1512,8 @@ end
 -- 132:00000ccc0000004400000dd40000042d0000244c000024cf007777447777777e
 -- 133:cdccc0004ccd0000dd4cd000244cc000c4422000fc40200044777700d7777770
 -- 134:000000000000000000000000000000000000000000000000077000007f770000
+-- 135:eddfdfddedddfdddeddfdfddeddfdfddedddddddeeddddddeeeeeeee0eeeeeee
+-- 136:dddddddedddddddedddddddedddddddedddddddeddddddeeeeeeeeeeeeeeeee0
 -- 144:00dccc00000ddcc00000dc0c0000dccc000dccc000cccccc000dccc00000dccc
 -- 145:dccc00000ddcc00000dc0c0000cccc0000dcccc000dccc0000cdcccc00000000
 -- 147:000007f7000002770000002200000077000007f70000077f0000007700000000
