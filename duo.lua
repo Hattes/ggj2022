@@ -353,7 +353,6 @@ function del(list, elem)
         if found then
             list[i-1] = list[i]
         end
-
         if list[i] == elem then
             found = true
         end
@@ -418,7 +417,10 @@ function update_menu()
     if btnp(BUTTON_Z) then
         start_instructions()
         current_level = 2
-    elseif btnp(BUTTON_X) then
+    elseif btnp(BUTTON_A) then
+        start_instructions()
+        current_level = 1
+    elseif btnp(BUTTON_S) then
         start_instructions()
         current_level = 3
     end
