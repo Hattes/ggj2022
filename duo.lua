@@ -526,7 +526,7 @@ function new_boss(tile_x, tile_y)
         tileY=tile_y,
         --speed=PLAYER_SPEED,
         --flip=1,
-        bbox=bounding_box({}),
+        bbox=bounding_box({x_min=8, x_max=24, y_min=8, y_max=24}),
         health=5,
         sfxs={hurt={id=SFX_ENEMY_HURT, note='C#5'}},
         dead=false,
@@ -1482,7 +1482,7 @@ function update_boss()
 
     if boss.move_state == ENTITY_STATE_STILL then
         if boss.state_counter > 30 then
-            if math.random() > 0.5 then
+            if math.random() > 0.8 then
                 boss_shoot_missile(0, 0)
                 boss_shoot_missile(24, 0.1)
             elseif math.random() > 0.5 then
@@ -1499,9 +1499,9 @@ function update_boss()
                         boss.move_state = ENTITY_STATE_MOVE
                     end
                 end
-            elseif math.random() > 0.5 then
+            elseif math.random() > 0.8 then
                 boss.move_state = ENTITY_STATE_TELEPORTING
-                if boss.y < ((HEIGHT / 2) + 6) then
+                if boss.y < ((HEIGHT / 2) - 8) then
                     boss.dir = DIR_DOWN
                 else
                     boss.dir = DIR_UP
@@ -1523,7 +1523,9 @@ function update_boss()
             boss.dir = DIR_LEFT
         end
     elseif boss.move_state == ENTITY_STATE_FROZEN then
-        -- TODO
+        if boss.state_counter > 240 then
+            boss.move_state = ENTITY_STATE_STILL
+        end
     elseif boss.move_state == ENTITY_STATE_TELEPORTING then
         if boss.dir == DIR_UP then
             boss.y = boss.y - 1
@@ -1535,6 +1537,29 @@ function update_boss()
             boss.move_state = ENTITY_STATE_STILL
             boss.state_counter = 0
             boss.dir = DIR_LEFT
+        end
+    end
+
+    if boss.move_state == ENTITY_STATE_MOVE or boss.move_state == ENTITY_STATE_STILL then
+        if wave_collision(boss) then
+            boss.move_state = ENTITY_STATE_FROZEN
+            boss.state_counter = 0
+            boss.dir = DIR_LEFT
+        end
+    end
+
+    if boss.move_state == ENTITY_STATE_FROZEN then
+        if particle_collision(boss) then
+            boss_shoot_missile(0, -0.6)
+            boss_shoot_missile(24, -0.5)
+            boss.health = boss.health - 1
+            boss.move_state = ENTITY_STATE_TELEPORTING
+            boss.state_counter = 0
+            if boss.y < ((HEIGHT / 2) - 8) then
+                boss.dir = DIR_DOWN
+            else
+                boss.dir = DIR_UP
+            end
         end
     end
 end
@@ -1611,6 +1636,7 @@ function check_weapon_collision(enemy)
         hurt_entity(enemy)
     end
 end
+
 function particle_collision(entity)
     entity_bbox = abs_bbox(entity)
     for _, particle in ipairs(particles) do
@@ -1620,6 +1646,7 @@ function particle_collision(entity)
         end
     end
 end
+
 function wave_collision(entity)
     entity_bbox = abs_bbox(entity)
     return intersect(wave.x, 240+cam.x, wave.y-3, wave.y+3,
