@@ -49,6 +49,8 @@ TILE_WINNING = 2
 ENTITY_STATE_STILL = 1
 ENTITY_STATE_MOVE = 2
 ENTITY_STATE_START_MOVING = 3
+ENTITY_STATE_FROZEN = 4
+ENTITY_STATE_TELEPORTING = 5
 PLAYER_WEAPON_STATE_FIRE_NO = 1
 PLAYER_WEAPON_STATE_FIRE_WAVE = 2
 PLAYER_WEAPON_STATE_FIRE_PARTICLE = 3
@@ -88,6 +90,14 @@ SPRITE_RABBIT = {
     [ENTITY_STATE_STILL] = {{sprite=400}},
     [ENTITY_STATE_MOVE] = {{sprite=401}},
 }
+
+SPRITE_BOSS = {
+    [ENTITY_STATE_STILL] = {{sprite=371, width=4, height=4}},
+    [ENTITY_STATE_MOVE] = {{sprite=371, width=4, height=4}},
+    [ENTITY_STATE_FROZEN] = {{sprite=435, width=4, height=4}},
+    [ENTITY_STATE_TELEPORTING] = {{sprite=435, width=4, height=4}},
+}
+
 SPRITE_BOHR_HEAD = 275
 SPRITE_BOHR_BODY = {
     [ENTITY_STATE_STILL] = {
@@ -482,9 +492,37 @@ function restart()
     end
     break_blocks = {}
 
+    boss = new_boss(20, 10)
+
     spawn_cats()
     spawn_blocks()
     spawn_rabbits()
+end
+
+function new_boss(tile_x, tile_y)
+    return {
+        name=string.format('boss from %d,%d', tile_x, tile_y),
+        sprites=SPRITE_BOSS,
+        x=tile_x*8,
+        y=tile_y*8,
+        tileX=tile_x,
+        tileY=tile_y,
+        --speed=PLAYER_SPEED,
+        --flip=1,
+        bbox=bounding_box({}),
+        health=5,
+        sfxs={hurt={id=SFX_ENEMY_HURT, note='C#5'}},
+        dead=false,
+        death_counter=0,
+        iframes=0,
+        iframes_max=30,
+        move_state=ENTITY_STATE_STILL,
+        spr_counter=0,
+        spr_counter_inc=0.1,
+        state_counter=0,
+        id=1337,
+        dir=DIR_LEFT,
+    }
 end
 
 function spawn_cats()
@@ -917,6 +955,7 @@ function update_carrot(carrot)
         end
     end
 end
+
 function spawn_carrot(rabbit)
     add(carrots,
         {x=rabbit.x,
@@ -1377,6 +1416,7 @@ function draw_enemies()
   for _, carrot in ipairs(carrots) do
       draw_enemy(carrot)
   end
+  draw_boss()
 end
 
 function draw_enemy(enemy)
@@ -1413,6 +1453,77 @@ function update_enemies()
   for _, carrot in ipairs(carrots) do
       update_carrot(carrot)
   end
+  update_boss()
+end
+
+function update_boss()
+    if boss.health == 0 then
+        return
+    end
+
+    boss.state_counter = boss.state_counter + 1
+
+    if boss.move_state == ENTITY_STATE_STILL then
+        if boss.state_counter > 30 then
+            if math.random() > 0.5 then
+                boss_shoot_missile()
+            elseif math.random() > 0.5 then
+                boss.move_state = ENTITY_STATE_MOVE
+                if math.random() > 0.5 then
+                    boss.dir = DIR_UP
+                else
+                    boss.dir = DIR_DOWN
+                end
+            elseif math.random() > 0.5 then
+                boss.move_state = ENTITY_STATE_TELEPORTING
+                if boss.y < (HEIGHT / 2) then
+                    boss.dir = DIR_DOWN
+                else
+                    boss.dir = DIR_UP
+                end
+            end
+
+            boss.state_counter = 0
+        end
+    elseif boss.move_state == ENTITY_STATE_MOVE then
+        if boss.dir == DIR_UP then
+            boss.y = boss.y - 0.2
+        else
+            boss.y = boss.y + 0.2
+        end
+
+        -- TODO: Make sure boss doesn't collide with walls
+        if boss.state_counter > 30 then
+            boss.move_state = ENTITY_STATE_STILL
+            boss.state_counter = 0
+            boss.dir = DIR_LEFT
+        end
+    elseif boss.move_state == ENTITY_STATE_FROZEN then
+    elseif boss.move_state == ENTITY_STATE_TELEPORTING then
+        if boss.dir == DIR_UP then
+            boss.y = boss.y - 1
+        else
+            boss.y = boss.y + 1
+        end
+
+        if boss.state_counter > 64 then
+            boss.move_state = ENTITY_STATE_STILL
+            boss.state_counter = 0
+            boss.dir = DIR_LEFT
+        end
+    end
+end
+
+function boss_shoot_missile()
+    -- TODO
+    spawn_carrot(boss)
+end
+
+function draw_boss()
+    if boss.health == 0 then
+        return
+    end
+    draw_enemy(boss)
 end
 
 function update_break_blocks()
@@ -1580,7 +1691,7 @@ function move_towards_player(enemy)
 end
 
 -- <TILES>
--- 001:dd77dd77dd77dd7777dd77dd77dd77dddd77dd77dd77dd7777dd77dd77dd77dd
+-- 001:ccddccddccddccddddccddccddccddccccddccddccddccddddccddccddccddcc
 -- 003:9999999999a999999a9a9999999999999999999999999a999999a9a999999999
 -- 004:4444444444444444444444444444444444444444444444444444444444444444
 -- 016:00000000eeeeeeeeddddddddccccccccccccccccddddddddeeeeeeee00000000
@@ -1779,8 +1890,8 @@ end
 -- 136:dddddddedddddddedddddddedddddddedddddddeddddddeeeeeeeeeeeeeeeee0
 -- 138:0000000200000002000000020000000200000000000000000000000000000002
 -- 139:3320000032000000320000003200000020000000000000002000000032000000
--- 144:00dccc00000ddcc00000dc2c0000dccc000dccc000cccccc000dccc00000dccc
--- 145:dccc00000ddcc00000dc2c0000cccc0000dcccc000dccc0000cdcccc00000000
+-- 144:0075550000077550000075250000755500075550006655550007656000007666
+-- 145:7555000007755000007525000055550000755550007656000067666600000000
 -- 147:000007f7000002770000002200000077000007f70000077f0000007700000000
 -- 148:7777777e277ff77e1f77777e102222227011111170077777000777f00077777f
 -- 149:d7777777d77ff777d77777f7222222f0111111f077777f0000777f00077777f0
