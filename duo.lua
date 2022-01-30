@@ -299,9 +299,23 @@ LEVEL_2_ENTITIES = {
      },
 }
 
+LEVEL_3_ENTITIES = {
+    bird_spawn_rate=nil,
+    camera={x=030*8, y=034*8},
+    players={
+        {x=031*8, y=038*8},
+        {x=031*8, y=046*8},
+    },
+    cats={},
+    blocks={},
+    rabbits={},
+}
+
+
 LEVEL_ENTITIES = {
     LEVEL_1_ENTITIES,
     LEVEL_2_ENTITIES,
+    LEVEL_3_ENTITIES,
 }
 
 ------ GLOBAL VARIABLES ----------
@@ -388,7 +402,7 @@ function update_menu()
         current_level = 1
     elseif btnp(BUTTON_X) then
         start_instructions()
-        current_level = 2
+        current_level = 3
     end
 end
 
@@ -604,10 +618,13 @@ function update_game()
     update_players()
     update_enemies()
     update_camera()
-    if t % LEVEL_ENTITIES[current_level].bird_spawn_rate == 0 then
+    local bird_spawn = LEVEL_ENTITIES[current_level].bird_spawn_rate
+    if bird_spawn ~= nil and t % bird_spawn == 0 then
         spawn_bird()
     end
-    update_radiation()
+    if current_level ~= 3 then
+        update_radiation()
+    end
     --update_entangled_blocks()
     update_break_blocks()
 end
@@ -622,7 +639,9 @@ function draw_game()
     draw_bohr(playerB)
     draw_particles()
     draw_wave()
-    draw_radiation()
+    if current_level ~= 3 then
+        draw_radiation()
+    end
     draw_weapon_switch()
     draw_health()
     draw_warning()
