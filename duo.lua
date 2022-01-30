@@ -388,8 +388,7 @@ function TIC()
         state = STATE_MENU
     elseif state == STATE_MENU then
         update_menu()
-        --draw_menu()
-        draw_victory()
+        draw_menu()
     elseif state == STATE_INSTRUCTIONS then
         update_instructions()
         draw_instructions()
