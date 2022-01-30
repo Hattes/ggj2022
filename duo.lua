@@ -200,7 +200,7 @@ LEVEL_1_ENTITIES = {
         {x=223, y=014},
         {x=235, y=004},
         {x=234, y=011},
-    }
+    },
     blocks={
         {x=086, y=004},
         {x=086, y=012},
@@ -230,6 +230,10 @@ LEVEL_1_ENTITIES = {
         {x=226, y=001},
         {x=226, y=009},
     }
+}
+
+LEVEL_ENTITIES = {
+    LEVEL_1_ENTITIES,
 }
 
 ------ GLOBAL VARIABLES ----------
@@ -369,8 +373,6 @@ function restart()
     state = STATE_GAME
     cam = {x=0,y=0}
     particles = {}
-    spawn_cat(16,14)
-    spawn_cat(28,2)
     wave = {x=0,y=0,firing=false}
     radiation_x = -10
     radiation_particles = {}
@@ -386,7 +388,26 @@ function restart()
                         {x=pair_b[2].tile_x*8, y=pair_b[2].tile_y*8, disappeared=false, wave_shot=false}}
     end
     break_blocks = {}
-    spawn_break_block(11,5)
+
+    current_level = 1
+    spawn_cats()
+    spawn_blocks()
+end
+
+function spawn_cats()
+    local entities = LEVEL_ENTITIES[current_level]
+    local coords = entities.cats
+    for _, coord in ipairs(coords) do
+        spawn_cat(coord.x, coord.y)
+    end
+end
+
+function spawn_blocks()
+    local entities = LEVEL_ENTITIES[current_level]
+    local coords = entities.blocks
+    for _, coord in ipairs(coords) do
+        spawn_break_block(coord.x, coord.y)
+    end
 end
 
 function spawn_break_block(tile_x, tile_y)
