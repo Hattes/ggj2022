@@ -455,10 +455,17 @@ function draw_kamelasa(x, y)
         x_offset = 1
     end
 
+    local cam_x = 0
+    local cam_y = 0
+    if cam ~= nil then
+        cam_x = cam.x
+        cam_y = cam.y
+    end
+
     spr(
         the_sprite.sprite,
-        x + x_offset,
-        y,
+        x + x_offset - cam_x,
+        y - cam_y,
         BLACK,
         1,
         the_sprite.flip,
@@ -641,6 +648,7 @@ end
 function update_game()
     update_players()
     update_enemies()
+    update_kamelasa()
     update_camera()
     local bird_spawn = LEVEL_ENTITIES[current_level].bird_spawn_rate
     if bird_spawn ~= nil and t % bird_spawn == 0 then
@@ -651,6 +659,18 @@ function update_game()
     end
     --update_entangled_blocks()
     update_break_blocks()
+end
+
+function update_kamelasa()
+    if kamelasa == nil then
+        return
+    end
+
+    if entity_collision(playerA, kamelasa) or entity_collision(playerB, kamelasa) then
+        state = STATE_VICTORY
+        t = 0
+        music()
+    end
 end
 
 function draw_game()
@@ -670,6 +690,10 @@ function draw_game()
     draw_health()
     if current_level ~= 3 then
         draw_warning()
+    end
+
+    if current_level == 3 and kamelasa ~= nil then
+        draw_kamelasa(kamelasa.x, kamelasa.y)
     end
 end
 
@@ -1617,8 +1641,6 @@ function update_boss()
             boss.state_counter = 0
         end
         if particle_collision(boss) then
-            boss_shoot_missile(0, -0.6)
-            boss_shoot_missile(24, -0.5)
             boss.health = boss.health - 1
             boss.move_state = ENTITY_STATE_TELEPORTING
             boss.state_counter = 0
@@ -1632,11 +1654,22 @@ function update_boss()
                 sfx(SFX_HURT, 'E-4', -1, 0, 15, -4)
                 sfx(SFX_HURT, 'F-4', -1, 1, 15, -4)
                 sfx(SFX_HURT, 'F#4', -1, 2, 15, -4)
+                add_kamelasa(boss.x+8, boss.y+6)
             else
+                boss_shoot_missile(0, -0.6)
+                boss_shoot_missile(24, -0.5)
                 sfx(SFX_HURT, 'F-5', -1, 1, 15, -3)
             end
         end
     end
+end
+
+function add_kamelasa(x, y)
+    kamelasa = {
+        x=x,
+        y=y,
+        bbox=bounding_box{_, x_min=5, x_max=11, y_min=0, y_max=17},
+    }
 end
 
 function boss_shoot_missile(x_offset, speed_offset)
