@@ -899,14 +899,8 @@ function check_radiation_collision(player)
 end
 
 function update_carrot(carrot)
-    trace("carrot at x=" .. carrot.x)
-    trace("carrot at y=" .. carrot.y)
     carrot.spr_counter = carrot.spr_counter + carrot.spr_counter_inc
     local dx, dy = getdxdy(carrot.speed, carrot.dir)
-    trace("speed" .. carrot.speed)
-    trace("dir" .. carrot.dir)
-    trace("dx" .. dx)
-    trace("dy" .. dy)
     carrot.x = carrot.x + dx
     carrot.y = carrot.y + dy
 
@@ -940,8 +934,6 @@ function spawn_carrot(rabbit)
      })
 end
 function update_rabbit(rabbit)
-    trace("rabbit at x=" .. rabbit.x)
-    trace("rabbit at y=" .. rabbit.y)
     local player = player_to_attack(rabbit)
     rabbit.spr_counter = rabbit.spr_counter + rabbit.spr_counter_inc
 
@@ -1254,7 +1246,6 @@ function check_tile_effects(player)
         if fget(tile_id, TILE_DEADLY) then
             hurt_entity(player)
         elseif fget(tile_id, TILE_WINNING) then
-            trace('apa')
             --victory()
         end
     end
@@ -1275,13 +1266,11 @@ function hurt_entity(entity)
 end
 
 function victory()
-    trace("VICTORY!")
     state = STATE_VICTORY
     victory_time = t
 end
 
 function game_over()
-    trace("GAME OVER!")
     state = STATE_GAME_OVER
 end
 
@@ -1400,9 +1389,6 @@ function draw_enemy(enemy)
         body_data.rotation,
         width,
         height)
-    if enemy.name == "carrot" then
-        --trace(body_data.sprite)
-    end
 end
 
 function update_enemies()
