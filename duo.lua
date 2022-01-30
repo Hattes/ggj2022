@@ -424,6 +424,10 @@ function update_menu()
     end
 end
 
+function start_level_3()
+    boss = new_boss(54, 45)
+end
+
 function start_instructions()
     music()
     state = STATE_INSTRUCTIONS
@@ -542,11 +546,13 @@ function restart()
     end
     break_blocks = {}
 
-    boss = new_boss(20, 10)
-
     spawn_cats()
     spawn_blocks()
     spawn_rabbits()
+
+    if current_level == 3 then
+        start_level_3()
+    end
 end
 
 function new_boss(tile_x, tile_y)
@@ -1519,36 +1525,46 @@ function update_enemies()
 end
 
 function update_boss()
-    if boss.health == 0 then
+    if boss == nil or boss.health == 0 then
         return
     end
 
     boss.state_counter = boss.state_counter + 1
 
+    local y = boss.y - cam.y
+
     if boss.move_state == ENTITY_STATE_STILL then
         if boss.state_counter > 30 then
             if math.random() > 0.8 then
-                boss_shoot_missile(0, 0)
-                boss_shoot_missile(24, 0.1)
+                local extra_speed = 0
+                if boss.health < 3 then
+                    extra_speed = 1
+                end
+                boss_shoot_missile(0, 0 + extra_speed)
+                boss_shoot_missile(24, 0.1 + extra_speed)
+                if boss.health == 1 then
+                    boss_shoot_missile(0, 0)
+                    boss_shoot_missile(24, 0.1)
+                end
                 sfx(SFX_MISSILE, 'C#3', -1, 1, 15, -1)
             elseif math.random() > 0.5 then
                 if math.random() > 0.5 then
-                    if (boss.y > (HEIGHT/2) and not (boss.y < (8 + HEIGHT/2))) or
-                        (boss.y < (HEIGHT/2) and not (boss.y < 8)) then
+                    if (y > (HEIGHT/2) and not (y < (8 + HEIGHT/2))) or
+                        (y < (HEIGHT/2) and not (y < 8)) then
                         boss.dir = DIR_UP
                         boss.move_state = ENTITY_STATE_MOVE
                     end
                 else
-                    if (boss.y > (HEIGHT/2) and not (boss.y > (HEIGHT - 40))) or
-                        (boss.y < (HEIGHT/2) and not (boss.y > ((HEIGHT/2) - 40))) then
+                    if (y > (HEIGHT/2) and not (y > (HEIGHT - 40))) or
+                        (y < (HEIGHT/2) and not (y > ((HEIGHT/2) - 40))) then
                         boss.dir = DIR_DOWN
                         boss.move_state = ENTITY_STATE_MOVE
                     end
                 end
-            elseif math.random() > 0.8 then
+            elseif math.random() > 0.5 then
                 boss.move_state = ENTITY_STATE_TELEPORTING
                 sfx(SFX_MISSILE, 'C#4', -1, 1, 15, -2)
-                if boss.y < ((HEIGHT / 2) - 8) then
+                if y < ((HEIGHT / 2) - 8) then
                     boss.dir = DIR_DOWN
                 else
                     boss.dir = DIR_UP
@@ -1606,7 +1622,7 @@ function update_boss()
             boss.health = boss.health - 1
             boss.move_state = ENTITY_STATE_TELEPORTING
             boss.state_counter = 0
-            if boss.y < ((HEIGHT / 2) - 8) then
+            if y < ((HEIGHT / 2) - 8) then
                 boss.dir = DIR_DOWN
             else
                 boss.dir = DIR_UP
@@ -1644,7 +1660,7 @@ function boss_shoot_missile(x_offset, speed_offset)
 end
 
 function draw_boss()
-    if boss.health == 0 then
+    if boss == nil or boss.health == 0 then
         return
     end
     draw_enemy(boss)
