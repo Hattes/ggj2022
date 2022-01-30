@@ -48,6 +48,7 @@ TILE_WINNING = 2
 -- entity states
 ENTITY_STATE_STILL = 1
 ENTITY_STATE_MOVE = 2
+ENTITY_STATE_START_MOVING = 3
 PLAYER_WEAPON_STATE_FIRE_NO = 1
 PLAYER_WEAPON_STATE_FIRE_WAVE = 2
 PLAYER_WEAPON_STATE_FIRE_PARTICLE = 3
@@ -71,6 +72,10 @@ SPRITE_WAVE_GUN = 260
 SPRITE_WARNING = 340
 SPRITE_Z_KEY = 343
 SPRITE_X_KEY = 375
+SPRITE_CARROT = {[ENTITY_STATE_MOVE] = {{sprite=416},
+                                        {sprite=416, rotation=90},
+                                        {sprite=416, rotation=180},
+                                        {sprite=416, rotation=270}}}
 
 SPRITE_CAT = {
     [ENTITY_STATE_STILL] = {{sprite=272, width=2, height=2, height_offset=-8}},
@@ -78,6 +83,10 @@ SPRITE_CAT = {
 }
 SPRITE_BIRD = {
     [ENTITY_STATE_MOVE] = {{sprite=306}, {sprite=307}},
+}
+SPRITE_RABBIT = {
+    [ENTITY_STATE_STILL] = {{sprite=400}},
+    [ENTITY_STATE_MOVE] = {{sprite=401}},
 }
 SPRITE_BOHR_HEAD = 275
 SPRITE_BOHR_BODY = {
@@ -247,7 +256,8 @@ LEVEL_1_ENTITIES = {
         {x=229, y=007},
         {x=226, y=001},
         {x=226, y=009},
-    }
+    },
+    rabbits={{x=016,y=002}},
 }
 
 LEVEL_2_ENTITIES = {
@@ -269,6 +279,7 @@ LEVEL_ENTITIES = {
 t = 0
 victory_time=0
 state = STATE_INIT
+rabbit_id_counter = 0
 
 ------ UTILITIES ------
 function add(list, elem)
@@ -396,8 +407,12 @@ function restart()
     t = 0
     -- This is where we set state of players etc. to their initial values
     music(00)
+
     enemies_cat = {}
     enemies_bird = {}
+    enemies_rabbit = {}
+    carrots = {}
+
     switching_weapons = false
     weapon_wave_gun = {x=0, y=0, bbox=bounding_box({})}
     weapon_particle_gun = {x=0, y=0, bbox=bounding_box({})}
@@ -468,6 +483,7 @@ function restart()
 
     spawn_cats()
     spawn_blocks()
+    spawn_rabbits()
 end
 
 function spawn_cats()
@@ -475,6 +491,14 @@ function spawn_cats()
     local coords = entities.cats
     for _, coord in ipairs(coords) do
         spawn_cat(coord.x, coord.y)
+    end
+end
+
+function spawn_rabbits()
+    local entities = LEVEL_ENTITIES[current_level]
+    local coords = entities.rabbits
+    for _, coord in ipairs(coords) do
+        spawn_rabbit(coord.x, coord.y)
     end
 end
 
@@ -810,6 +834,11 @@ function check_enemy_collision(player)
             hurt_entity(player)
         end
     end
+    for _, rabbit in ipairs(enemies_rabbit) do
+        if entity_collision(player, rabbit) then
+            hurt_entity(player)
+        end
+    end
 end
 
 function update_weapon_switch()
@@ -866,6 +895,146 @@ function check_radiation_collision(player)
     if player.x < radiation_x then
         kill_entity(player)
     end
+end
+
+function update_carrot(carrot)
+    trace("carrot at x=" .. carrot.x)
+    trace("carrot at y=" .. carrot.y)
+    carrot.spr_counter = carrot.spr_counter + carrot.spr_counter_inc
+    local dx, dy = getdxdy(carrot.speed, carrot.dir)
+    trace("speed" .. carrot.speed)
+    trace("dir" .. carrot.dir)
+    trace("dx" .. dx)
+    trace("dy" .. dy)
+    carrot.x = carrot.x + dx
+    carrot.y = carrot.y + dy
+
+    carrot.state_timeout = carrot.state_timeout + 1
+
+    if is_entity_by_solid(carrot, carrot.dir, 0) or carrot.state_timeout <= 0 then
+        --del(carrots, carrot)
+    end
+
+    for _, player in ipairs({playerA, playerB}) do
+        if entity_collision(player, carrot) then
+            hurt_entity(player)
+            del(carrots, carrot)
+        end
+    end
+end
+function spawn_carrot(rabbit)
+    add(carrots,
+        {x=rabbit.x,
+         y=rabbit.y,
+         dir=rabbit.dir,
+         sprites=SPRITE_CARROT,
+         spr_counter=0,
+         spr_counter_inc=0.1,
+         bbox=bounding_box{_, x_min=2, x_max=4, y_min=2, y_max=4},
+         state_timeout=0,
+         speed=1,
+         iframes=0,
+         move_state=ENTITY_STATE_MOVE,
+         name="carrot",
+     })
+end
+function update_rabbit(rabbit)
+    trace("rabbit at x=" .. rabbit.x)
+    trace("rabbit at y=" .. rabbit.y)
+    local player = player_to_attack(rabbit)
+    rabbit.spr_counter = rabbit.spr_counter + rabbit.spr_counter_inc
+
+    if rabbit.move_state == ENTITY_STATE_MOVE then
+        rabbit.state_timeout = rabbit.state_timeout - 1
+        if rabbit.state_timeout <= 0 or is_entity_next_to_solid(rabbit, rabbit.dir) then
+            rabbit.move_state = ENTITY_STATE_STILL
+        if near(player, rabbit) then
+            rabbit.state_timeout = 10
+        else
+            rabbit.state_timeout = 20 + math.floor(math.random(40))
+        end
+        end
+        local dx, dy = getdxdy(rabbit.speed, rabbit.dir)
+        moveEntity(rabbit, dx, dy, rabbit.dir)
+
+        if in_camera(rabbit) and
+           near_on_any_dimension(player, rabbit) and
+           not has_active_carrot(rabbit) then
+            rabbit.move_state = ENTITY_STATE_STILL
+            spawn_carrot(rabbit)
+            --sfx(c_sfx_throw_carrot)
+            rabbit.state_timeout = 20 + math.floor(math.random(40))
+        end
+    elseif rabbit.move_state == ENTITY_STATE_STILL then
+        rabbit.state_timeout = rabbit.state_timeout - 1
+        if rabbit.state_timeout <= 0 and near(rabbit, player) then
+            rabbit.move_state = ENTITY_STATE_START_MOVING
+        end
+    end
+    if rabbit.move_state == ENTITY_STATE_START_MOVING then
+        local dir = get_random_direction()
+        if near(player, rabbit) then
+            dir = get_direction_to_player(rabbit, player)
+        end
+        if not is_entity_next_to_solid(rabbit, dir) then
+            rabbit.move_state = ENTITY_STATE_MOVE
+            rabbit.dir = dir
+            rabbit.state_timeout = 10
+        else
+            rabbit.move_state = ENTITY_STATE_STILL
+        end
+    end
+    if inarray(rabbit.dir, {DIR_LEFT, DIR_UP_LEFT, DIR_DOWN_LEFT}) then
+        rabbit.flip = 1
+    elseif inarray(rabbit.dir, {DIR_RIGHT, DIR_UP_RIGHT, DIR_DOWN_RIGHT}) then
+        rabbit.flip = 0
+    end
+    check_weapon_collision(rabbit)
+end
+function has_active_carrot(rabbit)
+    for _, carrot in ipairs(carrots) do
+        if carrot.rabbit == rabbit.id then
+            return false--true
+        end
+    end
+end
+function next_rabbit_id()
+    rabbit_id_ocunter = rabbit_id_counter + 1
+    return rabbit_id_counter
+end
+
+function get_random_direction()
+    local dirs = {DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT}
+    return dirs[math.floor(math.random(4)) + 1]
+end
+
+function in_camera(entity)
+    -- assume entities are 8x8 pixels
+    local x = entity.x + 3
+    local y = entity.y + 3
+    return cam.x < x and x < cam.x + WIDTH and
+           cam.y + 10 < y and y < cam.y + HEIGHT
+end
+function near(a, b)
+    return math.abs(a.x - b.x) + math.abs(a.y - b.y) < 80
+end
+function near_on_any_dimension(a, b)
+    return math.abs(a.x - b.x) < 10 or math.abs(a.y - b.y) < 10
+end
+function getdxdy(speed, dir)
+    local dx = 0
+    local dy = 0
+    if inarray(dir, {DIR_LEFT, DIR_UP_LEFT, DIR_DOWN_LEFT}) then
+        dx = -speed
+    elseif inarray(dir, {DIR_RIGHT, DIR_UP_RIGHT, DIR_DOWN_RIGHT}) then
+        dx = speed
+    end
+    if inarray(dir, {DIR_UP, DIR_UP_LEFT, DIR_UP_RIGHT}) then
+        dy = -speed
+    elseif inarray(dir, {DIR_DOWN, DIR_DOWN_LEFT, DIR_DOWN_RIGHT}) then
+        dy = speed
+    end
+    return dx, dy
 end
 
 function kill_entity(entity)
@@ -1169,12 +1338,45 @@ function spawn_bird()
     enemies_bird[#enemies_bird+1]=new_bird
 end
 
+function spawn_rabbit(tile_x, tile_y)
+    local new_rabbit = {
+        name=string.format('rabbit_from %d,%d', tile_x, tile_y),
+        sprites=SPRITE_RABBIT,
+        x=tile_x*8,
+        y=tile_y*8,
+        tileX=tile_x,
+        tileY=tile_y,
+        speed=PLAYER_SPEED,
+        flip=1,
+        bbox=bounding_box({}),
+        health=1,
+        sfxs={hurt={id=SFX_ENEMY_HURT, note='C#5'}},
+        dead=false,
+        death_counter=0,
+        iframes=0,
+        iframes_max=30,
+        move_state=ENTITY_STATE_MOVE,
+        spr_counter=0,
+        spr_counter_inc=0.1,
+        state_timeout=0,
+        id=next_rabbit_id(),
+        dir=DIR_LEFT,
+    }
+    enemies_rabbit[#enemies_rabbit+1]=new_rabbit
+end
+
 function draw_enemies()
   for _, cat in ipairs(enemies_cat) do
       draw_enemy(cat)
   end
   for _, bird in ipairs(enemies_bird) do
       draw_enemy(bird)
+  end
+  for _, rabbit in ipairs(enemies_rabbit) do
+      draw_enemy(rabbit)
+  end
+  for _, carrot in ipairs(carrots) do
+      draw_enemy(carrot)
   end
 end
 
@@ -1194,9 +1396,12 @@ function draw_enemy(enemy)
         BLACK,
         1,
         enemy.flip,
-        0,
+        body_data.rotation,
         width,
         height)
+    if enemy.name == "carrot" then
+        --trace(body_data.sprite)
+    end
 end
 
 function update_enemies()
@@ -1205,6 +1410,12 @@ function update_enemies()
   end
   for id, bird in ipairs(enemies_bird) do
       update_bird(bird, id)
+  end
+  for _, rabbit in ipairs(enemies_rabbit) do
+      update_rabbit(rabbit)
+  end
+  for _, carrot in ipairs(carrots) do
+      update_carrot(carrot)
   end
 end
 
@@ -1357,7 +1568,7 @@ end
 
 function move_towards_player(enemy)
     local player = player_to_attack(enemy)
-    -- skip if player to far away
+    -- skip if player too far away
     if math.abs(player.x-enemy.x) > WIDTH/2 then
         return
     end
@@ -1373,7 +1584,7 @@ function move_towards_player(enemy)
 end
 
 -- <TILES>
--- 001:ddccddccddccddccccddccddccddccddddccddccddccddccccddccddccddccdd
+-- 001:dd77dd77dd77dd7777dd772d77dd77dddd77dd77dd77dd7777dd77dd77dd77dd
 -- 003:9999999999a999999a9a9999999999999999999999999a999999a9a999999999
 -- 004:4444444444444444444444444444444444444444444444444444444444444444
 -- 016:00000000eeeeeeeeddddddddccccccccccccccccddddddddeeeeeeee00000000
@@ -1554,8 +1765,8 @@ end
 -- 136:dddddddedddddddedddddddedddddddedddddddeddddddeeeeeeeeeeeeeeeee0
 -- 138:0000000200000002000000020000000200000000000000000000000000000002
 -- 139:3320000032000000320000003200000020000000000000002000000032000000
--- 144:00dccc00000ddcc00000dc0c0000dccc000dccc000cccccc000dccc00000dccc
--- 145:dccc00000ddcc00000dc0c0000cccc0000dcccc000dccc0000cdcccc00000000
+-- 144:00dccc00000ddcc00000dc2c0000dccc000dccc000cccccc000dccc00000dccc
+-- 145:dccc00000ddcc00000dc2c0000cccc0000dcccc000dccc0000cdcccc00000000
 -- 147:000007f7000002770000002200000077000007f70000077f0000007700000000
 -- 148:7777777e277ff77e1f77777e102222227011111170077777000777f00077777f
 -- 149:d7777777d77ff777d77777f7222222f0111111f077777f0000777f00077777f0
@@ -1564,12 +1775,14 @@ end
 -- 155:2000000000000000000000000000000000000000000000000000000000000000
 -- 157:0000000000cc00000ccfc000cfcdcf00ccccfc000ccfcc0000ccc000cccccccc
 -- 158:000000000000000000cc00000ccfc000cfcdcf00ccccfc000ccfcc00cccccccc
+-- 160:0000000000600000060300000003300000003000000003000000000000000000
 -- 164:0070007f00000000000000000000000000000000000000000000000000000000
 -- 165:070007f000000000000000000000000000000000000000000000000000000000
 -- 168:0000000200000023000000230000002300000023000000020000000200000002
 -- 169:2200000033200000332000003320000033200000320000003200000032000000
 -- 170:0000000200000023000000230000023300000233000000220000000000000000
 -- 171:2200000033200000332000003232000022320000023200002320000033200000
+-- 176:0000000040000000049090000490900004909000044444400990099000000000
 -- 180:0000000000000000000000000000000000000000000000000000c00d00000cdc
 -- 181:000000000000000000000000000000000000000000d000000c00c000ccdc0000
 -- 184:0000000200000002000000020000000000000000000000000000000000000002
