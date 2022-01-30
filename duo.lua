@@ -1553,6 +1553,9 @@ function update_boss()
     end
 
     if boss.move_state == ENTITY_STATE_FROZEN then
+        if wave_collision(boss) then
+            boss.state_counter = 0
+        end
         if particle_collision(boss) then
             boss_shoot_missile(0, -0.6)
             boss_shoot_missile(24, -0.5)
@@ -1661,8 +1664,10 @@ end
 
 function wave_collision(entity)
     entity_bbox = abs_bbox(entity)
-    return intersect(wave.x, 240+cam.x, wave.y-3, wave.y+3,
-                     entity_bbox.nw.x, entity_bbox.ne.x, entity_bbox.nw.y, entity_bbox.sw.y)
+    return wave.firing and intersect(
+        wave.x, 240+cam.x, wave.y-3, wave.y+3,
+        entity_bbox.nw.x, entity_bbox.ne.x, entity_bbox.nw.y, entity_bbox.sw.y
+    )
 end
 
 function update_cat(cat, id)
